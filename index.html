@@ -2,14 +2,20 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Jeu Isométrique Tour par Tour v5.2 (LoS Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- <style> Moved to style.css -->
 </head>
 <body>
+    <div id="orientation-blocker">
+        <div class="orientation-message">
+            <p>Veuillez tourner votre appareil en mode paysage pour jouer.</p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rotate-cw"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        </div>
+    </div>
+
     <div class="game-container">
         <canvas id="gameCanvas" width="600" height="450"></canvas>
 
@@ -36,7 +42,6 @@
                 </div>
                 ⚡<span id="boss-ap">?</span> 🏃<span id="boss-mp">?</span>
             </div>
-            <!-- Add sheep info -->
             <div class="info-group" id="sheep-info-group">
                  <span id="enemy-label">Ennemis</span>: <span id="sheep-count">?</span>/<span id="sheep-total">?</span>
                  <br> HP: <span id="sheep-hp-summary">...</span>
@@ -67,9 +72,7 @@
                 </button>
             </div>
             <div class="controls">
-                <!-- Standard End Turn Button (potentially hidden on mobile) -->
                 <button id="end-turn-button">End Turn</button>
-                <!-- Mobile Specific Buttons -->
                 <button id="mobile-toggle-aim-button" class="mobile-action-button" aria-label="Toggle Aim Mode">Viser</button>
                 <button id="mobile-end-turn-button" class="mobile-action-button" aria-label="End Turn">Fin Tour</button>
             </div>
@@ -87,148 +90,38 @@
     </div>
     <div id="messageBox" class="message-box">Message</div>
 
-    <!-- UI Elements -->
-    <!-- [REMOVED DUPLICATE UI CONTAINER] -->
-
-    <!-- Inventory Modal -->
     <div id="inventory-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Inventory</h2>
-
-            <!-- Equipment Slots -->
             <div id="equipment-panel">
                 <h3>Equipment</h3>
                 <div class="equipment-slots-container">
                      <div class="slot empty" id="slot-head" data-slot-type="head">Head</div>
                      <div class="slot empty" id="slot-body" data-slot-type="body">Body</div>
                      <div class="slot empty" id="slot-weapon" data-slot-type="weapon">Weapon</div>
-                     <!-- Add other slots like body, legs, weapon later if needed -->
                 </div>
             </div>
-
-            <!-- Tabs -->
             <div class="tab-buttons">
                 <button class="tab-link active" data-tab="resources-tab">Resources</button>
                 <button class="tab-link" data-tab="items-tab">Items</button>
                  <button class="tab-link" data-tab="crafting-tab">Crafting</button>
             </div>
-
-            <!-- Tab Content -->
             <div id="resources-tab" class="tab-content active-tab-content">
                 <h3>Resources</h3>
-                <div id="resource-list" class="inventory-grid">
-                    <!-- Resource items will be populated by JS -->
-                </div>
+                <div id="resource-list" class="inventory-grid"></div>
             </div>
-
             <div id="items-tab" class="tab-content">
                 <h3>Items</h3>
-                <div id="item-list" class="inventory-grid">
-                    <!-- Item items will be populated by JS -->
-                </div>
+                <div id="item-list" class="inventory-grid"></div>
             </div>
-
              <div id="crafting-tab" class="tab-content">
                  <h3>Crafting</h3>
-                 <div id="crafting-list">
-                     <!-- Crafting recipes will be populated by JS -->
-                 </div>
+                 <div id="crafting-list"></div>
              </div>
         </div>
     </div>
 
-    <!-- End Match Screen (Game Over / Victory) Modal -->
-    <div id="end-match-screen" class="modal">
-        <div class="modal-content">
-            <h2 id="end-match-title">Game Over!</h2>
-            <p>Final Score: <span id="final-score">0</span></p>
-            <div id="drop-summary">
-                <h4>Resources Acquired:</h4>
-                <p>Calculating...</p>
-            </div>
-            <div class="modal-actions">
-                <button id="restart-button">Restart Game</button>
-                <button id="next-room-button" style="display: none;">Next Room</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Load the single entry point module -->
-    <script type="module" src="main.js"></script>
-
-    <!-- Moved UI Container here -->
-    <div id="ui-container">
-        <button id="inventory-button" aria-label="Open Inventory">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-briefcase">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-        </button>
-        <!-- Player Stats Display -->
-        <div id="player-stats">
-            <div><span>HP:</span> <span><span id="ui-player-hp">?</span>/<span id="ui-player-max-hp">?</span></span></div>
-            <div><span>AP:</span> <span><span id="ui-player-ap">?</span>/<span id="ui-player-max-ap">?</span></span></div>
-            <div><span>MP:</span> <span><span id="ui-player-mp">?</span>/<span id="ui-player-max-mp">?</span></span></div>
-            <div><span>Dmg Bonus:</span> <span id="ui-player-dmg-bonus">?</span></div>
-        </div>
-    </div>
-
-</body>
-</html>
-
-    <!-- UI Elements -->
-    <!-- [REMOVED DUPLICATE UI CONTAINER] -->
-
-    <!-- Inventory Modal -->
-    <div id="inventory-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Inventory</h2>
-
-            <!-- Equipment Slots -->
-            <div id="equipment-panel">
-                <h3>Equipment</h3>
-                <div class="equipment-slots-container">
-                     <div class="slot empty" id="slot-head" data-slot-type="head">Head</div>
-                     <div class="slot empty" id="slot-body" data-slot-type="body">Body</div>
-                     <div class="slot empty" id="slot-weapon" data-slot-type="weapon">Weapon</div>
-                     <!-- Add other slots like body, legs, weapon later if needed -->
-                </div>
-            </div>
-
-            <!-- Tabs -->
-            <div class="tab-buttons">
-                <button class="tab-link active" data-tab="resources-tab">Resources</button>
-                <button class="tab-link" data-tab="items-tab">Items</button>
-                 <button class="tab-link" data-tab="crafting-tab">Crafting</button>
-            </div>
-
-            <!-- Tab Content -->
-            <div id="resources-tab" class="tab-content active-tab-content">
-                <h3>Resources</h3>
-                <div id="resource-list" class="inventory-grid">
-                    <!-- Resource items will be populated by JS -->
-                </div>
-            </div>
-
-            <div id="items-tab" class="tab-content">
-                <h3>Items</h3>
-                <div id="item-list" class="inventory-grid">
-                    <!-- Item items will be populated by JS -->
-                </div>
-            </div>
-
-             <div id="crafting-tab" class="tab-content">
-                 <h3>Crafting</h3>
-                 <div id="crafting-list">
-                     <!-- Crafting recipes will be populated by JS -->
-                 </div>
-             </div>
-        </div>
-    </div>
-
-    <!-- End Match Screen (Game Over / Victory) Modal -->
     <div id="end-match-screen" class="modal">
         <div class="modal-content">
             <h2 id="end-match-title">Game Over!</h2>
@@ -244,10 +137,8 @@
         </div>
     </div>
 
-    <!-- Load the single entry point module -->
     <script type="module" src="main.js"></script>
 
-    <!-- Moved UI Container here -->
     <div id="ui-container">
         <button id="inventory-button" aria-label="Open Inventory">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-briefcase">
@@ -255,7 +146,6 @@
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
             </svg>
         </button>
-        <!-- Player Stats Display -->
         <div id="player-stats">
             <div><span>HP:</span> <span><span id="ui-player-hp">?</span>/<span id="ui-player-max-hp">?</span></span></div>
             <div><span>AP:</span> <span><span id="ui-player-ap">?</span>/<span id="ui-player-max-ap">?</span></span></div>

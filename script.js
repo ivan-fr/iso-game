@@ -31,6 +31,38 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(tooltipElement);
     let tooltipTimeout; // Keep timeout variable scoped
 
+    // --- Orientation Blocker Logic ---
+    const orientationBlocker = document.getElementById('orientation-blocker');
+
+    function checkOrientation() {
+        if (!orientationBlocker) return;
+
+        // Check for modern screen.orientation API first
+        if (screen.orientation && screen.orientation.type) {
+            if (screen.orientation.type.includes('portrait')) {
+                orientationBlocker.style.display = 'flex'; // Assuming flex is used for centering
+            } else {
+                orientationBlocker.style.display = 'none';
+            }
+        } else {
+            // Fallback for older browsers or devices
+            if (window.innerHeight > window.innerWidth) { // Simple check: Portrait if height > width
+                orientationBlocker.style.display = 'flex';
+            } else {
+                orientationBlocker.style.display = 'none';
+            }
+        }
+    }
+
+    // Initial check
+    checkOrientation();
+
+    // Listen for orientation changes
+    window.addEventListener('orientationchange', checkOrientation);
+    // Also listen for resize as a fallback, as orientationchange might not always fire reliably
+    window.addEventListener('resize', checkOrientation);
+    // --- End Orientation Blocker Logic ---
+
     // --- Tooltip Functions --- (showTooltip, hideTooltip defined here or outside if needed globally)
     function showTooltip(element, content) {
         clearTimeout(tooltipTimeout);
@@ -739,4 +771,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // If game.js expects global functions like showEndMatchScreen, ensure they are assigned
 // to window inside DOMContentLoaded as done above.
 
-// ... rest of your script.js, including game loop (animate function), event listeners for game actions etc. 
+// ... rest of your script.js, including game loop (animate function), event listeners for game actions etc.

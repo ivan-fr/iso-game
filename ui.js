@@ -59,11 +59,11 @@ export function updateHealthBar(barElement, currentHp, maxHp) {
 
 // Mise à jour de l'UI générale
 export function updateUI(
-    playerApDisplay, playerMpDisplay, bossApDisplay, bossMpDisplay, 
+    playerApDisplay, playerMpDisplay, bossApDisplay, bossMpDisplay,
     player, bossState, // Use dynamic boss state
     enemiesState, enemyCountDisplay, enemyTotalDisplay, enemyHpSummaryDisplay, // Use generic enemy state/displays
-    playerHealthBar, bossHealthBar, 
-    currentTurn, isMoving, activeEnemy, playerState, endTurnButton, gameOver // Use activeEnemy
+    playerHealthBar, bossHealthBar,
+    currentTurn, isMoving, activeEnemy, playerState, endTurnButton, mobileEndTurnButton, gameOver // Use activeEnemy, add mobileEndTurnButton
 ) {
     playerApDisplay.textContent = player.ap;
     playerMpDisplay.textContent = player.mp;
@@ -104,6 +104,9 @@ export function updateUI(
     }
 
     endTurnButton.disabled = isMoving || activeEnemy || currentTurn !== 'player' || playerState !== 'idle' || gameOver;
+    if (mobileEndTurnButton) {
+        mobileEndTurnButton.disabled = isMoving || activeEnemy || currentTurn !== 'player' || playerState !== 'idle' || gameOver;
+    }
 }
 
 /**
@@ -132,11 +135,40 @@ export function setupSpellBarListeners(setSelectedSpellFn, getSelectedSpellIndex
     for (let i = 0; i < 3; i++) {
         const btn = document.getElementById('spell-btn-' + i);
         if (btn) {
+            const spellIndex = i; // Capture index for listeners
+
+            // Click listener (for mouse and fallback)
             btn.addEventListener('click', function() {
-                setSelectedSpellFn(i);
-                updateSpellBarSelection(i);
-                showMessageFn(`Sort sélectionné : ${SPELLS[i].name}`);
+                // Check if the click was likely from a touch that already handled spell selection
+                if (btn.dataset.touchSpellSelected === 'true') {
+                    btn.dataset.touchSpellSelected = 'false'; // Reset flag
+                    return; // Avoid double processing
+                }
+                setSelectedSpellFn(spellIndex);
+                updateSpellBarSelection(spellIndex);
+                showMessageFn(`Sort sélectionné : ${SPELLS[spellIndex].name}`);
                 updateAllUIFn();
+            });
+
+            // Touchend listener for more reliable touch selection
+            btn.addEventListener('touchend', function(event) {
+                // Only select spell if a tooltip was NOT shown by a hold action
+                // The tooltip logic in setupSpellTooltips will handle hiding the tooltip
+                // and call event.preventDefault() if it showed a tooltip.
+                // This touchend listener is for quick taps that *don't* show a tooltip.
+                if (btn.dataset.tooltipShownByHold !== 'true') {
+                    // It was a quick tap, not a hold for tooltip
+                    setSelectedSpellFn(spellIndex);
+                    updateSpellBarSelection(spellIndex);
+                    showMessageFn(`Sort sélectionné : ${SPELLS[spellIndex].name}`);
+                    updateAllUIFn();
+                    btn.dataset.touchSpellSelected = 'true'; // Mark that touch handled it
+
+                    // We might need to prevent default here if the subsequent emulated click
+                    // causes issues, but let's test without it first.
+                    // event.preventDefault(); // Potentially add if double selection occurs
+                }
+                // If tooltipShownByHold was true, the touchend in setupSpellTooltips handles it.
             });
         }
     }
@@ -164,15 +196,16 @@ export function updateAllUI({
     activeEnemy, 
     playerState,
     endTurnButton,
+    mobileEndTurnButton, // Add mobileEndTurnButton
     gameOver
 }) {
     // Call updateUI with all params
     updateUI(
-        playerApDisplay, playerMpDisplay, bossApDisplay, bossMpDisplay, 
+        playerApDisplay, playerMpDisplay, bossApDisplay, bossMpDisplay,
         player, boss, // Pass bossState here
-        enemiesState, enemyCountDisplay, enemyTotalDisplay, enemyHpSummaryDisplay, 
-        playerHealthBar, bossHealthBar, 
-        currentTurn, isMoving, activeEnemy, playerState, endTurnButton, gameOver
+        enemiesState, enemyCountDisplay, enemyTotalDisplay, enemyHpSummaryDisplay,
+        playerHealthBar, bossHealthBar,
+        currentTurn, isMoving, activeEnemy, playerState, endTurnButton, mobileEndTurnButton, gameOver
     );
     // Cursor feedback
     const canvas = document.getElementById('gameCanvas');

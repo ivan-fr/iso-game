@@ -80,6 +80,7 @@ function updateAllUIWrapper() {
         activeEnemy,
         playerState,
         endTurnButton: document.getElementById('end-turn-button'),
+        mobileEndTurnButton: document.getElementById('mobile-end-turn-button'), // Add this
         gameOver
     });
 }

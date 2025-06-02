@@ -7,186 +7,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: 'Press Start 2P', cursive;
-            margin: 0;
-            padding: 0;
-            background-color: #1a252f; /* Slightly darker background */
-            color: #ecf0f1; /* Light text color */
-            overflow: hidden; /* Prevent scrolling */
-        }
-        .game-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: transparent;
-        }
-        canvas#gameCanvas {
-            display: block;
-            margin: 0;
-            border: none;
-            cursor: default;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 0;
-        }
-        .ui-panel {
-            position: absolute;
-            z-index: 10;
-            background-color: rgba(44, 62, 80, 0.85); /* Slightly more opaque */
-            padding: 8px 12px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35); /* Adjusted shadow */
-            border: 1px solid rgba(236, 240, 241, 0.2); /* Subtle border */
-            font-size: 0.8em;
-        }
-        #turnOrder {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 10;
-            background-color: rgba(44, 62, 80, 0.8);
-            padding: 5px 10px;
-            border-radius: 8px;
-            margin-bottom: 0;
-            font-size: 0.8em;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .info-bar {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 10;
-            background-color: rgba(44, 62, 80, 0.8);
-            padding: 8px;
-            border-radius: 8px;
-            margin-bottom: 0;
-            font-size: 0.8em;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            min-width: 180px;
-        }
-        .bottom-controls-container {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            background-color: rgba(44, 62, 80, 0.8);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        #spellBar {
-            padding: 0;
-            margin-bottom: 0;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        .controls {
-            padding: 0;
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-        .info {
-            padding: 0;
-            margin-bottom: 0;
-            color: #bdc3c7;
-            font-size: 0.75em;
-            text-align: center;
-        }
-        .info-group {
-            background-color: rgba(0,0,0,0.3);
-            padding: 5px 8px;
-            border-radius: 5px;
-            margin: 3px;
-            min-width: 120px;
-            text-align: center;
-        }
-        .health-bar-container {
-            width: 90px;
-            height: 8px;
-            background-color: #555;
-            border: 1px solid #ecf0f1;
-            border-radius: 4px;
-            margin: 2px auto 0;
-            overflow: hidden;
-        }
-        .health-bar {
-            height: 100%;
-            /* background-color: #2ecc71; */ /* Use gradient */
-            background: linear-gradient(to bottom, #55efc4, #00b894); /* Default Green Gradient */
-            width: 100%;
-            transition: width 0.5s ease, background 0.5s ease;
-            border-radius: 3px 0 0 3px; /* Keep rounding */
-        }
-        #player-health-bar {
-             /* background-color: #3498db; */ /* Blue for player health */
-             background: linear-gradient(to bottom, #74b9ff, #0984e3); /* Blue Gradient */
-        }
-        /* Add gradient for boss health bar if needed (using default green now) */
-        #boss-health-bar {
-             background: linear-gradient(to bottom, #fab1a0, #e17055); /* Red/Orange Gradient */
-        }
-        .message-box {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(44, 62, 80, 0.9);
-            color: #ecf0f1;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            z-index: 100;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            pointer-events: none;
-            font-size: 0.8em;
-        }
-        .message-box.show {
-            opacity: 1;
-        }
-        .spell-btn svg {
-            transition: transform 0.2s ease;
-        }
-        .spell-btn:hover svg {
-            transform: scale(1.1);
-        }
-        /* Style for sheep info group */
-        #sheep-info-group {
-            /* Add specific styles if needed, e.g., background */
-            background-color: rgba(142, 68, 173, 0.3); /* Purple tint */
-        }
-        /* Add ID for boss info group */
-        #boss-info-group {
-            /* Specific styles if needed */
-        }
-    </style>
+    <!-- <style> Moved to style.css -->
 </head>
 <body>
     <div class="game-container">
         <canvas id="gameCanvas" width="600" height="450"></canvas>
 
         <div id="turnOrder">
-            <span id="turnOrder-player" style="padding:2px 8px;border-radius:6px;background:#3498db;color:#fff;">Joueur</span>
-            <span style="margin:0 5px;" id="turnOrder-arrow-boss">→</span>
-            <span id="turnOrder-boss" style="padding:2px 8px;border-radius:6px;background:#c0392b;color:#fff;">Boss</span>
-            <span style="margin:0 5px;" id="turnOrder-arrow-enemy">→</span>
-            <span id="turnOrder-enemy" style="padding:2px 8px;border-radius:6px;background:#8e44ad;color:#fff;">Ennemis</span>
+            <span id="turnOrder-player" class="turnOrder-player">Joueur</span>
+            <span class="turnOrder-arrow" id="turnOrder-arrow-boss">→</span>
+            <span id="turnOrder-boss" class="turnOrder-boss">Boss</span>
+            <span class="turnOrder-arrow" id="turnOrder-arrow-enemy">→</span>
+            <span id="turnOrder-enemy" class="turnOrder-enemy">Ennemis</span>
         </div>
 
         <div class="info-bar">
@@ -213,20 +45,20 @@
 
         <div class="bottom-controls-container">
             <div id="spellBar">
-                <button class="spell-btn" id="spell-btn-0" title="Mono-cible" style="background:none;border:none;outline:none;cursor:pointer;padding:0;">
+                <button class="spell-btn" id="spell-btn-0" title="Mono-cible">
                     <svg width="40" height="40" viewBox="0 0 44 44">
                         <circle cx="22" cy="22" r="18" fill="#f1c40f" stroke="#fff" stroke-width="2.5"/>
                         <circle cx="22" cy="22" r="8" fill="none" stroke="#222" stroke-width="3"/>
                     </svg>
                 </button>
-                <button class="spell-btn" id="spell-btn-1" title="Zone croix" style="background:none;border:none;outline:none;cursor:pointer;padding:0;">
+                <button class="spell-btn" id="spell-btn-1" title="Zone croix">
                     <svg width="40" height="40" viewBox="0 0 44 44">
                         <circle cx="22" cy="22" r="18" fill="#e67e22" stroke="#fff" stroke-width="2.5"/>
                         <rect x="19" y="6" width="6" height="32" rx="3" fill="#fff" stroke="#222" stroke-width="1.5"/>
                         <rect x="6" y="19" width="32" height="6" rx="3" fill="#fff" stroke="#222" stroke-width="1.5"/>
                     </svg>
                 </button>
-                <button class="spell-btn" id="spell-btn-2" title="Poussée" style="background:none;border:none;outline:none;cursor:pointer;padding:0;">
+                <button class="spell-btn" id="spell-btn-2" title="Poussée">
                     <svg width="40" height="40" viewBox="0 0 44 44">
                         <circle cx="22" cy="22" r="18" fill="#00b894" stroke="#fff" stroke-width="2.5"/>
                         <rect x="18" y="12" width="8" height="20" rx="4" fill="#fff" stroke="#222" stroke-width="1.5"/>
@@ -235,7 +67,11 @@
                 </button>
             </div>
             <div class="controls">
+                <!-- Standard End Turn Button (potentially hidden on mobile) -->
                 <button id="end-turn-button">End Turn</button>
+                <!-- Mobile Specific Buttons -->
+                <button id="mobile-toggle-aim-button" class="mobile-action-button" aria-label="Toggle Aim Mode">Viser</button>
+                <button id="mobile-end-turn-button" class="mobile-action-button" aria-label="End Turn">Fin Tour</button>
             </div>
             <div class="info">
                 <ul>
@@ -246,7 +82,7 @@
             </div>
         </div>
 
-        <div id="spellTooltip" style="position:fixed;z-index:200;pointer-events:none;background:rgba(44,62,80,0.97);color:#fff;padding:8px 14px;border-radius:8px;box-shadow:0 2px 8px #222;font-size:0.8em;display:none;max-width:220px;line-height:1.5;"></div>
+        <div id="spellTooltip" class="spell-tooltip-base"></div>
 
     </div>
     <div id="messageBox" class="message-box">Message</div>
@@ -279,7 +115,7 @@
             </div>
 
             <!-- Tab Content -->
-            <div id="resources-tab" class="tab-content" style="display: block;">
+            <div id="resources-tab" class="tab-content active-tab-content">
                 <h3>Resources</h3>
                 <div id="resource-list" class="inventory-grid">
                     <!-- Resource items will be populated by JS -->
@@ -314,6 +150,96 @@
             <div class="modal-actions">
                 <button id="restart-button">Restart Game</button>
                 <button id="next-room-button" style="display: none;">Next Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the single entry point module -->
+    <script type="module" src="main.js"></script>
+
+    <!-- Moved UI Container here -->
+    <div id="ui-container">
+        <button id="inventory-button" aria-label="Open Inventory">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-briefcase">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+        </button>
+        <!-- Player Stats Display -->
+        <div id="player-stats">
+            <div><span>HP:</span> <span><span id="ui-player-hp">?</span>/<span id="ui-player-max-hp">?</span></span></div>
+            <div><span>AP:</span> <span><span id="ui-player-ap">?</span>/<span id="ui-player-max-ap">?</span></span></div>
+            <div><span>MP:</span> <span><span id="ui-player-mp">?</span>/<span id="ui-player-max-mp">?</span></span></div>
+            <div><span>Dmg Bonus:</span> <span id="ui-player-dmg-bonus">?</span></div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+    <!-- UI Elements -->
+    <!-- [REMOVED DUPLICATE UI CONTAINER] -->
+
+    <!-- Inventory Modal -->
+    <div id="inventory-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Inventory</h2>
+
+            <!-- Equipment Slots -->
+            <div id="equipment-panel">
+                <h3>Equipment</h3>
+                <div class="equipment-slots-container">
+                     <div class="slot empty" id="slot-head" data-slot-type="head">Head</div>
+                     <div class="slot empty" id="slot-body" data-slot-type="body">Body</div>
+                     <div class="slot empty" id="slot-weapon" data-slot-type="weapon">Weapon</div>
+                     <!-- Add other slots like body, legs, weapon later if needed -->
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-buttons">
+                <button class="tab-link active" data-tab="resources-tab">Resources</button>
+                <button class="tab-link" data-tab="items-tab">Items</button>
+                 <button class="tab-link" data-tab="crafting-tab">Crafting</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="resources-tab" class="tab-content active-tab-content">
+                <h3>Resources</h3>
+                <div id="resource-list" class="inventory-grid">
+                    <!-- Resource items will be populated by JS -->
+                </div>
+            </div>
+
+            <div id="items-tab" class="tab-content">
+                <h3>Items</h3>
+                <div id="item-list" class="inventory-grid">
+                    <!-- Item items will be populated by JS -->
+                </div>
+            </div>
+
+             <div id="crafting-tab" class="tab-content">
+                 <h3>Crafting</h3>
+                 <div id="crafting-list">
+                     <!-- Crafting recipes will be populated by JS -->
+                 </div>
+             </div>
+        </div>
+    </div>
+
+    <!-- End Match Screen (Game Over / Victory) Modal -->
+    <div id="end-match-screen" class="modal">
+        <div class="modal-content">
+            <h2 id="end-match-title">Game Over!</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <div id="drop-summary">
+                <h4>Resources Acquired:</h4>
+                <p>Calculating...</p>
+            </div>
+            <div class="modal-actions">
+                <button id="restart-button">Restart Game</button>
+                <button id="next-room-button" class="next-room-button-style">Next Room</button>
             </div>
         </div>
     </div>

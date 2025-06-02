@@ -480,9 +480,13 @@ async function startEnemyTurns() {
 
 function handleCanvasClick(event) {
     if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy) return;
-    const rect = canvas.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const clickY = event.clientY - rect.top;
+    const rect = canvas.getBoundingClientRect(); // rect.left/top are relative to viewport
+    
+    // Scale mouse click coordinates from CSS pixels to canvas drawing surface pixels
+    const dpr = window.devicePixelRatio || 1;
+    const clickX = (event.clientX - rect.left) * dpr;
+    const clickY = (event.clientY - rect.top) * dpr;
+    
     let foundEntity = null;
     getAllLivingEntities().forEach(entity => {
         if (entity === player) return;
@@ -1079,10 +1083,165 @@ export function gameTick() {
     // --- End Scheduled Actions ---
 }
 
+// --- Touch Event Handlers ---
+let lastTouchEndTime = 0; // Used to distinguish single taps from other gestures if needed
+
+function handleTouchStart(event) {
+    event.preventDefault();
+    if (gameOver || isMoving || activeEnemy) return;
+
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const touchX = (touch.clientX - rect.left) * dpr;
+    const touchY = (touch.clientY - rect.top) * dpr;
+
+    // Simulate hover for spell previews on touch start
+    const grid = gridUtils.screenToIso(touchX, touchY, currentGridCols, currentGridRows);
+    hoveredTile = { x: grid.x, y: grid.y };
+    // Update enemy hover based on this new hoveredTile (mimicking part of canvasMouseMoveHandler)
+    updateEnemyHoverReachableTiles(hoveredTile); 
+    // No direct action on touchstart, wait for touchend for tap, or touchmove for drag-hover
+}
+
+function handleTouchMove(event) {
+    event.preventDefault();
+    if (gameOver || isMoving || activeEnemy) return;
+
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const touchX = (touch.clientX - rect.left) * dpr;
+    const touchY = (touch.clientY - rect.top) * dpr;
+    
+    const grid = gridUtils.screenToIso(touchX, touchY, currentGridCols, currentGridRows);
+    hoveredTile = { x: grid.x, y: grid.y };
+    updateEnemyHoverReachableTiles(hoveredTile);
+}
+
+function handleTouchEnd(event) {
+    event.preventDefault();
+    if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy) return;
+
+    // Basic tap detection (can be improved with time/move thresholds)
+    const touch = event.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const touchX = (touch.clientX - rect.left) * dpr;
+    const touchY = (touch.clientY - rect.top) * dpr;
+
+    // Process this touch as a "click" action
+    // The logic is very similar to handleCanvasClick, so we can call a shared function
+    // or duplicate the relevant parts. For now, let's adapt the core logic.
+    
+    let clickedGrid = gridUtils.screenToIso(touchX, touchY, currentGridCols, currentGridRows);
+    console.log(`[TOUCH DEBUG] Touch End (Tap): (CSS: ${touch.clientX.toFixed(1)},${touch.clientY.toFixed(1)}) -> (Canvas: ${touchX.toFixed(1)}, ${touchY.toFixed(1)}) -> ISO Grid: (${clickedGrid.x}, ${clickedGrid.y})`);
+
+    // --- Logic adapted from handleCanvasClick ---
+    if (playerState === 'idle') {
+        const targetTile = reachableTiles.find(tile => tile.x === clickedGrid.x && tile.y === clickedGrid.y && tile.cost <= player.mp);
+        if (targetTile) {
+            moveEntityTo(player, targetTile.x, targetTile.y);
+        } else {
+            showMessage('Case invalide ou hors de portée.');
+        }
+    } else if (playerState === 'aiming') {
+          let effectiveTargetTile = null;
+          if (hoveredTile) { // Use the tile that was being hovered over (set by touchstart/touchmove)
+              effectiveTargetTile = { ...hoveredTile };
+              console.log(`[TOUCH AIM DEBUG] Using hoveredTile for attack: (${effectiveTargetTile.x},${effectiveTargetTile.y})`);
+          } else {
+              // Fallback to the exact touchend location if no hover info (less likely with current setup)
+              effectiveTargetTile = { ...clickedGrid };
+               console.log(`[TOUCH AIM DEBUG] No hoveredTile, using touchend location: (${effectiveTargetTile.x},${effectiveTargetTile.y})`);
+          }
+
+          if (!effectiveTargetTile) { // Should not happen if logic is correct
+              console.log("[TOUCH AIM DEBUG] No effective target tile for attack.");
+              showMessage('Visée annulée.', 1500);
+              playerState = 'idle';
+              attackableTiles = [];
+              reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+              updateAllUIWrapper();
+              return;
+          }
+
+          const targetIsAttackable = attackableTiles.find(tile => tile.x === effectiveTargetTile.x && tile.y === effectiveTargetTile.y);
+
+          if (targetIsAttackable) {
+              const losToTile = hasLineOfSightWithCurrentGrid(player.gridX, player.gridY, effectiveTargetTile.x, effectiveTargetTile.y, getAllLivingEntities());
+              if (losToTile) {
+                   playerAttack(effectiveTargetTile.x, effectiveTargetTile.y);
+                    playerState = 'idle';
+                    reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+                    attackableTiles = [];
+              } else {
+                   showMessage('Obstacle bloque la vue !');
+                   playerState = 'idle'; 
+                   attackableTiles = [];
+                   reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+              }
+          } else {
+               showMessage('Case invalide ou hors de portée.');
+               playerState = 'idle';
+               attackableTiles = [];
+               reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+          }
+          updateAllUIWrapper();
+    }
+    // --- End Logic adapted from handleCanvasClick ---
+    
+    // Reset hoveredTile after action
+    // hoveredTile = null; 
+    // enemyHoveredReachableTiles = []; // Also clear enemy hover highlights
+    // hoveredEnemyId = null;
+    // updateAllUIWrapper(); // Update UI to remove hover effects
+}
+
+// Helper function to update enemy hover state, extracted from canvasMouseMoveHandler
+function updateEnemyHoverReachableTiles(currentHoveredTile) {
+    let foundHoveredEnemy = null;
+    const entities = getAllLivingEntities();
+
+    if (currentHoveredTile) {
+        for (const entity of entities) {
+            if (entity === player || entity._isDying) continue;
+            if (entity.gridX === currentHoveredTile.x && entity.gridY === currentHoveredTile.y) {
+                foundHoveredEnemy = entity;
+                break;
+            }
+        }
+    }
+    
+    if (foundHoveredEnemy && foundHoveredEnemy.mp > 0) {
+        if (hoveredEnemyId !== foundHoveredEnemy.id) { 
+            const blockers = entities.filter(e => e.id !== foundHoveredEnemy.id && e.hp > 0);
+            enemyHoveredReachableTiles = gridUtils.getTilesInRangeBFS(
+                foundHoveredEnemy.gridX, 
+                foundHoveredEnemy.gridY, 
+                foundHoveredEnemy.mp, 
+                blockers, 
+                false,
+                currentMapGrid, 
+                currentGridCols, 
+                currentGridRows
+            );
+            hoveredEnemyId = foundHoveredEnemy.id;
+        }
+    } else {
+        if (hoveredEnemyId !== null) { 
+            enemyHoveredReachableTiles = [];
+            hoveredEnemyId = null;
+        }
+    }
+}
+
+
 // --- RESTORED FUNCTIONS START ---
 function setupInputHandlers() {
     window.addEventListener('keydown', handleKeyDown);
     if (canvas) {
+        // Mouse Listeners
         canvas.removeEventListener('click', handleCanvasClick);
         canvas.addEventListener('click', handleCanvasClick);
         
@@ -1091,21 +1250,79 @@ function setupInputHandlers() {
         
         canvas.removeEventListener('mouseleave', canvasMouseLeaveHandler);
         canvas.addEventListener('mouseleave', canvasMouseLeaveHandler);
+
+        // Touch Listeners
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+        canvas.removeEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+        canvas.removeEventListener('touchend', handleTouchEnd);
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        canvas.removeEventListener('touchcancel', handleTouchEnd); // Treat cancel like end for simplicity
+        canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
     }
     const endTurnButton = document.getElementById('end-turn-button');
-    if (endTurnButton) {
-        const newButton = endTurnButton.cloneNode(true);
-        endTurnButton.parentNode.replaceChild(newButton, endTurnButton);
-        newButton.addEventListener('click', () => { if (playerState === 'idle' && !activeEnemy && !isMoving) endTurn(); });
+    if (endTurnButton) { // Desktop End Turn Button
+        const newButton = endTurnButton.cloneNode(true); // Re-clone to ensure no duplicate listeners if run multiple times
+        if(endTurnButton.parentNode) endTurnButton.parentNode.replaceChild(newButton, endTurnButton);
+        newButton.addEventListener('click', () => { if (playerState === 'idle' && !activeEnemy && !isMoving && !gameOver) endTurn(); });
     }
+
+    // Mobile - Toggle Aim Button
+    const mobileToggleAimBtn = document.getElementById('mobile-toggle-aim-button');
+    if (mobileToggleAimBtn) {
+        mobileToggleAimBtn.removeEventListener('click', toggleAimState); // Remove previous if any
+        mobileToggleAimBtn.addEventListener('click', toggleAimState);
+    }
+
+    // Mobile - End Turn Button
+    const mobileEndTurnBtn = document.getElementById('mobile-end-turn-button');
+    if (mobileEndTurnBtn) {
+        mobileEndTurnBtn.removeEventListener('click', endTurnMobileHandler); // Remove previous if any
+        mobileEndTurnBtn.addEventListener('click', endTurnMobileHandler);
+    }
+}
+
+// Wrapper for mobile end turn to match condition of desktop button
+function endTurnMobileHandler() {
+    if (playerState === 'idle' && !activeEnemy && !isMoving && !gameOver) {
+        endTurn();
+    }
+}
+
+// Function to toggle aiming state (callable by button)
+export function toggleAimState() {
+    if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy) return;
+
+    if (playerState === 'idle' && player.ap > 0) {
+        playerState = 'aiming';
+        const spell = SPELLS[getSelectedSpellIndex()];
+        // Ensure PLAYER_ATTACK_RANGE is available or use spell.range directly
+        const range = spell.range ?? gridUtils.PLAYER_ATTACK_RANGE; // Fallback, though PLAYER_ATTACK_RANGE was removed from grid.js
+        let allTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, range, [], true, currentMapGrid, currentGridCols, currentGridRows);
+        attackableTiles = allTiles.filter(tile => hasLineOfSightWithCurrentGrid(player.gridX, player.gridY, tile.x, tile.y, getAllLivingEntities()));
+        reachableTiles = []; // Clear movement tiles
+        showMessage('Mode Visée (Touchez pour tirer, Touchez Viser pour annuler)', 3000);
+    } else if (playerState === 'aiming') {
+        playerState = 'idle';
+        attackableTiles = [];
+        reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+        showMessage('Visée annulée', 1500);
+    }
+    updateAllUIWrapper();
 }
 
 function canvasMouseMoveHandler(event) {
              if (gameOver) return;
  
             const rect = canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
+            // Scale mouse move coordinates from CSS pixels to canvas drawing surface pixels
+            const dpr = window.devicePixelRatio || 1;
+            const mouseX = (event.clientX - rect.left) * dpr;
+            const mouseY = (event.clientY - rect.top) * dpr;
     
     // --- Update hoveredTile --- 
     const grid = gridUtils.screenToIso(mouseX, mouseY, currentGridCols, currentGridRows);
@@ -1178,26 +1395,41 @@ function canvasMouseLeaveHandler() {
 
 function resizeCanvas() {
     if (!canvas) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = window.innerWidth;
+    const cssHeight = window.innerHeight;
+
+    // Set the actual drawing surface size based on DPR for sharpness
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+
+    // Set the CSS size of the canvas so it visually occupies window.innerWidth/Height
+    canvas.style.width = cssWidth + 'px';
+    canvas.style.height = cssHeight + 'px';
     
+    // The camera offset logic should use the full DPR-scaled canvas dimensions
+    // because all drawing (isoToScreen outputs) will happen in this larger coordinate space.
+    // Game logic (TILE_W, entity grid positions) remains independent of DPR.
+    // Mouse/Touch events (clientX/Y) are in CSS pixels and will be scaled before screenToIso.
     if (currentGridCols > 0) {
         gridUtils.updateCameraOffset(canvas.width, canvas.height, currentGridCols, currentGridRows);
     }
 
-    // Use a combined list to update screen coords for all entities
+    // Update screen coordinates for all entities after resize.
+    // isoToScreen will correctly use the cameraOffset that's aware of the DPR-scaled canvas.
     const entitiesToResize = [player];
     if(bossState) entitiesToResize.push(bossState);
     entitiesToResize.push(...enemiesState); 
 
     entitiesToResize.forEach(entity => {
-        if (!entity) return; // Skip if entity is null
+        if (!entity) return; 
         const screenPos = gridUtils.isoToScreen(entity.gridX, entity.gridY);
         entity.screenX = screenPos.x;
         entity.screenY = screenPos.y;
     });
 
-    console.log(`Canvas resized to: ${canvas.width}x${canvas.height}`);
+    console.log(`Canvas resized to: ${canvas.width}x${canvas.height} (CSS: ${cssWidth}x${cssHeight}, DPR: ${dpr})`);
 }
 
 function loadRoom(roomId) {

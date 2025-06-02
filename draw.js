@@ -1193,14 +1193,15 @@ export function drawProjectiles(ctx, projectiles, SPELLS) {
 }
 
 // Fonction pour dessiner les animations de dégâts
-export function drawDamageAnimations(ctx, damageAnimations) {
+export function drawDamageAnimations(ctx, damageAnimations, TILE_W) { // Added TILE_W parameter
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // Use game font, slightly larger
-    ctx.font = 'bold 30px "Press Start 2P", cursive'; 
+    // Use game font, make size relative to TILE_W
+    const fontSize = Math.round(TILE_W * 0.375); // 80 * 0.375 = 30px
+    ctx.font = `bold ${fontSize}px "Press Start 2P", cursive`; 
 
-    const TILE_H = 40; // Define or import TILE_H if not available globally here
+    const TILE_H = TILE_W / 2; // Define TILE_H based on TILE_W for consistency
 
     const now = performance.now(); // Get current time if needed for independent calcs
 

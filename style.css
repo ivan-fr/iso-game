@@ -1,6 +1,233 @@
-/* Existing styles... */
+/* Base Game Styles */
+body {
+    font-family: 'Press Start 2P', cursive;
+    margin: 0;
+    padding: 0;
+    background-color: #1a252f; /* Slightly darker background */
+    color: #ecf0f1; /* Light text color */
+    overflow: hidden; /* Prevent scrolling */
+}
 
-/* UI Container */
+.game-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: transparent;
+}
+
+canvas#gameCanvas {
+    display: block;
+    margin: 0;
+    border: none;
+    cursor: default;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+/* UI Panels and Bars */
+.ui-panel { /* Generic panel style, can be extended */
+    position: absolute;
+    z-index: 10;
+    background-color: rgba(44, 62, 80, 0.85);
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(236, 240, 241, 0.2);
+    font-size: 0.8em;
+}
+
+#turnOrder {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    background-color: rgba(44, 62, 80, 0.8);
+    padding: 5px 10px;
+    border-radius: 8px;
+    margin-bottom: 0;
+    font-size: 0.8em;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.turnOrder-player, .turnOrder-boss, .turnOrder-enemy {
+    padding: 2px 8px;
+    border-radius: 6px;
+    color: #fff;
+}
+.turnOrder-player { background: #3498db; }
+.turnOrder-boss { background: #c0392b; }
+.turnOrder-enemy { background: #8e44ad; }
+.turnOrder-arrow { margin: 0 5px; }
+
+
+.info-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 10;
+    background-color: rgba(44, 62, 80, 0.8);
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 0;
+    font-size: 0.8em;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    min-width: 180px;
+}
+
+.info-group {
+    background-color: rgba(0,0,0,0.3);
+    padding: 5px 8px;
+    border-radius: 5px;
+    margin: 3px;
+    min-width: 120px;
+    text-align: center;
+}
+
+#sheep-info-group {
+    background-color: rgba(142, 68, 173, 0.3); /* Purple tint */
+}
+
+#boss-info-group {
+    /* Specific styles if needed */
+}
+
+.health-bar-container {
+    width: 90px;
+    height: 8px;
+    background-color: #555;
+    border: 1px solid #ecf0f1;
+    border-radius: 4px;
+    margin: 2px auto 0;
+    overflow: hidden;
+}
+
+.health-bar {
+    height: 100%;
+    background: linear-gradient(to bottom, #55efc4, #00b894); /* Default Green Gradient */
+    width: 100%;
+    transition: width 0.5s ease, background 0.5s ease;
+    border-radius: 3px 0 0 3px;
+}
+
+#player-health-bar {
+     background: linear-gradient(to bottom, #74b9ff, #0984e3); /* Blue Gradient */
+}
+#boss-health-bar {
+     background: linear-gradient(to bottom, #fab1a0, #e17055); /* Red/Orange Gradient */
+}
+
+/* Bottom Controls */
+.bottom-controls-container {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(44, 62, 80, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+#spellBar {
+    padding: 0;
+    margin-bottom: 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.spell-btn {
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.spell-btn svg {
+    transition: transform 0.2s ease;
+}
+.spell-btn:hover svg {
+    transform: scale(1.1);
+}
+
+.controls {
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.info {
+    padding: 0;
+    margin-bottom: 0;
+    color: #bdc3c7;
+    font-size: 0.75em;
+    text-align: center;
+}
+.info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.info li {
+    display: inline; /* Or use flex for better spacing if needed */
+    margin: 0 5px;
+}
+
+
+/* Message Box */
+.message-box {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(44, 62, 80, 0.9);
+    color: #ecf0f1;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+    font-size: 0.8em;
+}
+.message-box.show {
+    opacity: 1;
+}
+
+/* Spell Tooltip */
+.spell-tooltip-base {
+    position: fixed;
+    z-index: 200;
+    pointer-events: none;
+    background: rgba(44,62,80,0.97);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #222;
+    font-size: 0.8em;
+    display: none;
+    max-width: 220px;
+    line-height: 1.5;
+}
+
+
+/* UI Container (Inventory Button and Player Stats) */
 #ui-container {
     position: absolute;
     /* top: 10px; */
@@ -49,9 +276,13 @@
 
 /* Modal Base Styles */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 100; /* Sit on top */
+    display: none; /* Hidden by default unless active-tab-content is present */
+    padding: 6px 12px;
+    animation: fadeEffect 0.5s; /* Fading effect */
+}
+.active-tab-content {
+    display: block;
+}
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -74,6 +305,7 @@
     box-shadow: 0 5px 25px rgba(0,0,0,0.5); /* More pronounced shadow */
     text-align: left; /* Align content left */
     font-family: sans-serif; /* More readable font for content */
+    position: relative; /* Needed for close button positioning */
 }
 
 .close-button {
@@ -1013,501 +1245,293 @@
     min-width: 180px; /* Ensure minimum width */
 }
 
-#player-stats > div { /* Target the direct div children we just added */
-    display: contents; /* Make the div act as if its children are direct grid items */
-}
+/* Removed duplicated modal styles that were here */
 
-#player-stats > div > span:first-child { /* Style for the Label (e.g., HP:) */
-    color: #bdc3c7; /* Lighter grey for labels */
-    text-align: right;
+.next-room-button-style {
+    display: none; /* Initially hidden */
+    background-color: #5cb85c; /* Green for next/continue */
 }
-
-#player-stats > div > span:last-child { /* Style for the Value part */
-    font-weight: bold;
-    color: #f1c40f; /* Gold color for numbers/values */
-    white-space: nowrap;
-}
-
-/* Override for the Dmg Bonus value span which isn't nested */
-#ui-player-dmg-bonus {
-    font-weight: bold;
-    color: #f1c40f;
-}
-
-/* Remove old rule targeting nested spans */
-/* #player-stats span span { ... } */
-
-/* Modal Base Styles */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 100; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
-    opacity: 0; /* Start transparent */
-    transition: opacity 0.3s ease-in-out;
-}
-
-.modal-content {
-    background-color: #2c2f33; /* Dark background */
-    color: #ffffff; /* White text */
-    margin: 15% auto; /* 15% from the top and centered */
-    padding: 25px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more specific */
-    max-width: 500px; /* Maximum width */
-    border-radius: 8px;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.5); /* More pronounced shadow */
-    text-align: left; /* Align content left */
-    font-family: sans-serif; /* More readable font for content */
-}
-
-.close-button {
-    color: #aaa;
-    position: absolute;
-    top: 15px; /* Adjust position */
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    line-height: 1;
-    z-index: 1; /* Ensure it's above content */
-    background: none;
-    border: none;
-    padding: 0;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: #fff; /* Brighter hover */
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* Use Press Start for modal titles */
-.modal h2, .modal h3 {
-    font-family: 'Press Start 2P', cursive;
-    color: #f1c40f; /* Gold color for titles */
-    margin-top: 0;
-    border-bottom: 1px solid #555; /* Darker border */
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-    font-size: 1.2em; /* Adjust size */
-    text-align: center;
-}
-
-.modal h3 {
-    font-size: 1em; /* Slightly smaller */
-    color: #bdc3c7; /* Lighter grey for subtitle */
-    border-bottom: none;
-}
-
-/* Style for the end match screen specifically */
-#end-match-screen .modal-content {
-    border: 2px solid #c0392b; /* Red border for game over */
-}
-
-#end-match-screen[data-victory="true"] .modal-content { /* Style differently on victory */
-    border: 2px solid #27ae60; /* Green border for victory */
-}
-
-#end-match-title {
-    margin-top: 0;
-    color: #e74c3c; /* Red title for game over */
-}
-#end-match-screen[data-victory="true"] #end-match-title {
-     color: #2ecc71; /* Green title for victory */
-}
-
-#final-score {
-    font-size: 1.2em;
-    margin-bottom: 20px;
-}
-
-#drop-summary {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #555;
-    text-align: left;
-}
-#drop-summary h3 {
-    margin-bottom: 10px;
-    color: #f1c40f; /* Gold color for header */
-    text-align: center;
-}
-#drop-summary ul {
-    list-style: none;
-    padding: 0;
-}
-#drop-summary li {
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-}
-.drop-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-/* Inventory Specific Styles */
-#equipment-panel {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: rgba(0,0,0,0.2); /* Darker transparent background */
-    border-radius: 5px;
-}
-
-.equipment-slots-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.slot {
-    width: 70px;
-    height: 70px;
-    border: 2px dashed #555; /* Darker dashed border */
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0,0,0,0.15); /* Darker slot background */
-    font-size: 0.8em;
-    color: #aaa; /* Lighter text for empty */
-    text-align: center;
-    cursor: default;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.slot.empty:hover {
-    background-color: rgba(255,255,255,0.05);
-    border-color: #777;
-}
-
-.slot:not(.empty) {
-    border-style: solid;
-    border-color: #888;
-    background-color: rgba(255, 255, 255, 0.05); /* Slightly lighter background when filled */
-    cursor: pointer; /* Allow clicking to unequip */
-}
-
-.slot:not(.empty):hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: #aaa;
-}
-
-.slot img {
-    max-width: 40px;
-    max-height: 40px;
-    margin-bottom: 3px;
-}
-
-.slot span {
-    font-size: 0.75em;
-    color: #ccc; /* Lighter text for item name */
-    display: block;
-     overflow: hidden;
-     text-overflow: ellipsis;
-     white-space: nowrap;
-     max-width: 60px; /* Prevent long names from overflowing */
-}
-
-
-/* Tab Styles */
-.tab-buttons {
-    overflow: hidden;
-    border-bottom: 1px solid #555; /* Darker border */
-    margin-bottom: 15px;
-    margin-left: -25px; /* Extend to modal edge */
-    margin-right: -25px;
-    padding-left: 25px; /* Re-add padding */
-}
-
-.tab-buttons button {
-    background-color: transparent; /* Transparent background */
-    float: left;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 14px 16px;
-    transition: 0.3s;
-    font-size: 1em; /* Adjusted size */
-    color: #aaa; /* Dim text color */
-    border-bottom: 3px solid transparent; /* Underline effect preparation */
-    margin-bottom: -1px; /* Align with border */
-}
-
-.tab-buttons button:hover {
-    background-color: rgba(255,255,255, 0.05); /* Subtle hover */
-    color: #fff;
-}
-
-.tab-buttons button.active {
-    background-color: transparent; /* No background */
-    color: #f1c40f; /* Gold color for active */
-    border-bottom: 3px solid #f1c40f; /* Gold underline */
-}
-
-.tab-content {
-    display: none; /* Hidden by default */
-    padding: 6px 12px;
-    animation: fadeEffect 0.5s; /* Fading effect */
-}
-
-/* Fade in tabs */
-@keyframes fadeEffect {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-
-/* Inventory Grid */
-.inventory-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 10px;
-    max-height: 300px; /* Limit height and allow scroll */
-    overflow-y: auto;
-    padding: 10px;
-    background-color: rgba(0,0,0,0.1); /* Darker grid background */
-    border-radius: 5px;
-    border: 1px solid #444; /* Darker border */
-}
-
-.inventory-item {
-    border: 1px solid #555; /* Darker border */
-    border-radius: 5px;
-    padding: 5px;
-    background-color: rgba(255, 255, 255, 0.05); /* Darker item background */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    height: 100px;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.1s, box-shadow 0.1s, background-color 0.1s;
-}
-
-.inventory-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
-    background-color: rgba(255, 255, 255, 0.1); /* Slightly lighter on hover */
-    border-color: #777;
-}
-
-.inventory-item img {
-    max-width: 50px;
-    max-height: 50px;
-    margin-bottom: 5px;
-    object-fit: contain;
-}
-
-.inventory-item-name {
-    font-size: 0.8em;
-    color: #ddd; /* Lighter text */
-    display: block;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.inventory-item-count {
-    position: absolute;
-    bottom: 2px;
-    right: 4px;
-    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker count bg */
-    color: white;
-    font-size: 0.75em;
-    padding: 1px 4px;
-    border-radius: 3px;
-}
-
-/* Crafting List */
-#crafting-list {
-     max-height: 350px; /* Adjust as needed */
-     overflow-y: auto;
-     padding-right: 10px; /* Space for scrollbar */
-}
-
-.crafting-recipe {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid #555; /* Darker border */
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    background-color: rgba(0, 0, 0, 0.15); /* Darker recipe background */
-}
-
-.crafting-recipe-output {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    min-width: 80px;
-     cursor: help; /* Indicate tooltip */
-}
-
-.crafting-recipe-output img {
-    width: 40px;
-    height: 40px;
-    margin-bottom: 5px;
-}
-
-.crafting-recipe-output span {
-    font-size: 0.8em;
-    font-weight: bold;
-    color: #eee; /* Lighter text */
-}
-
-.crafting-recipe-ingredients {
-    display: flex;
-    flex-grow: 1;
-    margin: 0 15px;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.ingredient {
-    display: flex;
-    align-items: center;
-     cursor: help; /* Indicate tooltip */
-}
-
-.ingredient img {
-    width: 24px;
-    height: 24px;
-    margin-right: 4px;
-}
-
-.ingredient span {
-    font-size: 0.85em;
-    color: #ccc; /* Lighter text */
-}
-
-.ingredient .required {
-    font-weight: bold;
-    margin-right: 2px;
-    color: #fff; /* White for required */
-}
-.ingredient .available {
-    color: #2ecc71; /* Brighter green */
-}
-.ingredient .missing {
-    color: #e74c3c; /* Brighter red */
-}
-
-.craft-button {
-    padding: 8px 12px;
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.craft-button:hover:not(:disabled) {
+.next-room-button-style:hover {
     background-color: #4cae4c;
 }
 
-.craft-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+
+/* Media Queries for Responsiveness */
+
+/* Tablet - max-width: 1024px */
+@media (max-width: 1024px) {
+    /* Adjustments for tablets */
+    .modal-content {
+        margin: 10% auto;
+        width: 85%;
+        max-width: 600px; /* Slightly wider for tablets */
+    }
+
+    #player-stats {
+        font-size: 0.8em;
+        min-width: 160px;
+    }
+
+    .bottom-controls-container {
+        padding: 8px;
+        gap: 6px;
+    }
+    #spellBar {
+        gap: 10px;
+    }
+    .spell-btn svg {
+        width: 36px;
+        height: 36px;
+    }
+    #end-turn-button {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+    .info {
+        font-size: 0.7em;
+    }
+    .info li {
+        margin: 0 3px;
+    }
+
 }
 
-/* Rename Game Over to End Match */
-.end-match-content {
-    text-align: center;
+/* Mobile - max-width: 768px */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px; /* Adjust base font size for mobile if needed */
+    }
+
+    .game-container {
+        padding: 5px; /* Reduce padding on very small screens */
+    }
+
+    #turnOrder {
+        top: 10px;
+        left: 10px;
+        padding: 4px 8px;
+        font-size: 0.7em;
+    }
+    .turnOrder-player, .turnOrder-boss, .turnOrder-enemy {
+        padding: 2px 6px;
+    }
+
+    .info-bar {
+        top: 10px;
+        right: 10px;
+        padding: 6px;
+        font-size: 0.7em;
+        min-width: 150px; /* Adjust min-width */
+        gap: 3px;
+    }
+    .info-group {
+        padding: 4px 6px;
+        min-width: 100px; /* Adjust min-width */
+    }
+    .health-bar-container {
+        width: 70px; /* Smaller health bars */
+        height: 7px;
+    }
+
+    .bottom-controls-container {
+        bottom: 10px;
+        padding: 5px;
+        gap: 5px;
+        width: calc(100% - 20px); /* Take more width */
+        box-sizing: border-box;
+    }
+
+    #spellBar {
+        gap: 8px;
+        flex-wrap: wrap; /* Allow spell buttons to wrap */
+        justify-content: space-around; /* Better spacing for wrapped items */
+    }
+    .spell-btn svg {
+        width: 32px; /* Smaller spell icons */
+        height: 32px;
+    }
+    .spell-btn {
+        padding: 2px; /* Add some padding for touch */
+    }
+
+    #end-turn-button {
+        padding: 10px 12px; /* Larger touch target */
+        font-size: 0.85em;
+        width: 100%; /* Make end turn button full width of its container */
+        margin-top: 5px; /* Add some space if spells wrap */
+    }
+    .controls {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+
+    .info { /* Instructions text */
+        font-size: 0.65em;
+    }
+    .info ul {
+        display: flex;
+        flex-direction: column; /* Stack instructions */
+        align-items: center;
+        gap: 2px;
+    }
+    .info li {
+        margin: 0;
+    }
+
+
+    #ui-container {
+        bottom: auto; /* Override fixed bottom */
+        top: 10px; /* Move to top */
+        left: auto; 
+        right: 10px; /* Keep on right or move below turnOrder */
+        /* Or consider placing it near the bottom but above controls if space is an issue */
+        /* For example: bottom: calc(var(--bottom-controls-height, 100px) + 10px); */
+        padding: 3px;
+        gap: 5px;
+    }
+    #inventory-button {
+        width: 32px;
+        height: 32px;
+    }
+    #inventory-button svg {
+        width: 18px;
+        height: 18px;
+    }
+    #player-stats {
+        font-size: 0.7em;
+        padding: 5px 8px;
+        min-width: 140px; /* Further reduce min-width */
+        gap: 2px 6px;
+    }
+
+
+    /* Modals on Mobile */
+    .modal-content {
+        margin: 5% auto; /* Less top margin */
+        width: 90%; /* More width for content */
+        max-width: none; /* Remove max-width constraint for small screens */
+        padding: 20px;
+        font-size: 0.9em; /* Adjust font size in modals */
+    }
+    .modal h2, .modal h3 {
+        font-size: 1.1em;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+    }
+    .modal h3 {
+        font-size: 0.9em;
+    }
+    .close-button {
+        top: 10px;
+        right: 10px;
+        font-size: 32px; /* Larger close button */
+        width: 32px; /* Ensure tap area */
+        height: 32px;
+        line-height: 32px;
+        text-align: center;
+    }
+
+    .equipment-slots-container {
+        gap: 8px;
+        justify-content: center;
+    }
+    .slot {
+        width: 60px; /* Smaller slots */
+        height: 60px;
+        font-size: 0.7em;
+    }
+    .slot img {
+        max-width: 30px;
+        max-height: 30px;
+    }
+
+    .tab-buttons button {
+        padding: 12px 10px; /* Adjust padding */
+        font-size: 0.9em;
+    }
+
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Adjust item size */
+        gap: 8px;
+        max-height: 250px; /* Adjust height */
+    }
+    .inventory-item {
+        height: 90px; /* Adjust item height */
+    }
+    .inventory-item img {
+        max-width: 40px;
+        max-height: 40px;
+    }
+    .inventory-item-name {
+        font-size: 0.75em;
+    }
+
+    #crafting-list {
+        max-height: 280px;
+    }
+    .crafting-recipe {
+        flex-direction: column; /* Stack recipe parts */
+        gap: 10px;
+        padding: 8px;
+    }
+    .crafting-recipe-ingredients {
+        margin: 0;
+        justify-content: center;
+    }
+    .craft-button {
+        width: 100%; /* Full width craft button */
+        padding: 10px;
+    }
+
+    #end-match-screen button {
+        padding: 12px 15px; /* Larger buttons */
+        font-size: 1em;
+    }
+    .next-room-button-style {
+        /* ensure it's visible if it was set to display:none by default */
+    }
+
+    /* Original End Turn button hidden on mobile */
+    #end-turn-button {
+        display: none;
+    }
+    /* Hide keyboard instructions on mobile */
+    .info {
+        display: none;
+    }
+
+    .mobile-action-button {
+        display: inline-block; /* Show mobile buttons */
+        padding: 10px 15px;
+        font-size: 0.9em; /* Adjust as needed */
+        color: #ecf0f1;
+        background-color: #34495e; /* Button color */
+        border: 1px solid #566573;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 5px;
+        min-width: 100px; /* Ensure decent tap area */
+        text-align: center;
+    }
+    .mobile-action-button:hover {
+        background-color: #4a6572;
+    }
+    .mobile-action-button:active {
+        background-color: #2c3e50;
+    }
+
+    /* Adjust controls container for new buttons if they are side-by-side */
+    .controls {
+        display: flex; /* Allow buttons to sit side-by-side */
+        flex-wrap: wrap; /* Allow wrapping if space is tight */
+        justify-content: center;
+        gap: 10px; /* Space between mobile buttons */
+    }
 }
 
-#end-match-screen button {
-     padding: 10px 20px;
-     font-size: 1.1em;
-     cursor: pointer;
-     color: white;
-     border: none;
-     border-radius: 5px;
-     margin: 10px 5px 0; /* Add some margin */
- }
-
-#restart-button {
-    background-color: #d9534f; /* Reddish for restart/game over */
+/* Styles for mobile action buttons (default to hidden) */
+.mobile-action-button {
+    display: none;
 }
-#restart-button:hover {
-    background-color: #c9302c;
-}
-
-#next-room-button {
-     background-color: #5cb85c; /* Green for next/continue */
- }
- #next-room-button:hover {
-     background-color: #4cae4c;
- }
-
-/* Tooltip */
-.tooltip {
-     display: none;
-     position: absolute;
-     background-color: rgba(40, 40, 40, 0.9);
-     color: #fff;
-     padding: 8px 12px;
-     border-radius: 5px;
-     font-size: 0.9em;
-     z-index: 101; /* Above modal content */
-     white-space: nowrap;
-     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-     pointer-events: none; /* Allow clicks to pass through */
-}
-
-.tooltip-title {
-    font-weight: bold;
-    font-size: 1.1em;
-    margin-bottom: 4px;
-    border-bottom: 1px solid #666;
-    padding-bottom: 3px;
-}
-
-.tooltip-type {
-    font-style: italic;
-    color: #ccc;
-    margin-bottom: 5px;
-    font-size: 0.9em;
-}
-
-.tooltip-stat {
-    color: #87CEEB; /* Light blue for stats */
-    font-weight: bold;
-}
-
-/* Inventory modal styling */
-#inventory-modal .modal-content {
-    /* ... existing code ... */
-}
-
-/* Style the player stats display */
-#player-stats {
-    background: rgba(44, 62, 80, 0.8); /* Darker, more opaque background */
-    padding: 8px 12px; /* Increased padding */
-    border-radius: 6px;
-    font-size: 0.85em; /* Slightly larger font */
-    border: 1px solid rgba(236, 240, 241, 0.3); /* Slightly stronger border */
-    color: #ecf0f1; /* Light text */
-    display: grid;
-    grid-template-columns: auto 1fr; /* Label width auto, Value takes rest */
-    gap: 4px 10px; /* Row gap, Column gap */
-    min-width: 180px; /* Ensure minimum width */
-}
-
-#player-stats > div { /* Target the direct div children we just added */
-    color: #f1c40f; /* Gold color for numbers */
-} 

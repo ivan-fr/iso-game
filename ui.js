@@ -266,26 +266,94 @@ export function updateTurnOrder(currentTurn, bossState) {
 // --- Spell tooltips ---
 export function setupSpellTooltips(SPELLS) {
     const tooltip = document.getElementById('spellTooltip');
+    const HOLD_DURATION = 500; // ms
+    const MOVE_THRESHOLD = 10; // pixels
+
     for (let i = 0; i < SPELLS.length; i++) {
         const btn = document.getElementById('spell-btn-' + i);
         if (!btn) continue;
-        btn.addEventListener('mouseenter', e => {
+
+        let tooltipTimer = null;
+        let touchStartX, touchStartY;
+        btn.dataset.tooltipShownByHold = 'false'; // Custom data attribute
+
+        const showTooltip = () => {
             tooltip.style.display = 'block';
             tooltip.innerHTML = `<b>${SPELLS[i].name}</b><br>Portée: ${SPELLS[i].range}<br>Dégâts: ${SPELLS[i].damage().toString().replace(/\D/g,'')}+<br>${SPELLS[i].aoe ? 'Zone croix' : SPELLS[i].push ? 'Poussée' : 'Mono-cible'}`;
             const rect = btn.getBoundingClientRect();
-            // Mesure dynamique du tooltip
             const ttWidth = tooltip.offsetWidth;
             const ttHeight = tooltip.offsetHeight;
-            // Centre horizontalement et clamp
             let left = rect.left + (rect.width - ttWidth) / 2;
             left = Math.max(8, Math.min(left, window.innerWidth - ttWidth - 8));
-            // Place juste au-dessus du bouton
             const top = rect.top - ttHeight - 8 + window.scrollY;
             tooltip.style.left = `${left}px`;
             tooltip.style.top = `${top}px`;
+        };
+
+        const hideTooltip = () => {
+            tooltip.style.display = 'none';
+        };
+
+        // Desktop hover
+        btn.addEventListener('mouseenter', e => {
+            // Don't show mouse tooltip if one is already shown by touch-hold
+            if (btn.dataset.tooltipShownByHold === 'true') return;
+            showTooltip();
         });
         btn.addEventListener('mouseleave', () => {
-            tooltip.style.display = 'none';
+            // Don't hide if it was shown by touch-hold and touch is still ongoing (edge case, mostly for safety)
+            if (btn.dataset.tooltipShownByHold === 'true') return;
+            hideTooltip();
         });
+
+        // Touch interactions
+        btn.addEventListener('touchstart', e => {
+            e.preventDefault(); // Prevent click event firing immediately after touch, and other defaults
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            btn.dataset.tooltipShownByHold = 'false'; // Reset flag
+            clearTimeout(tooltipTimer); // Clear any existing timer
+            tooltipTimer = setTimeout(() => {
+                showTooltip();
+                btn.dataset.tooltipShownByHold = 'true';
+            }, HOLD_DURATION);
+        }, { passive: false });
+
+        btn.addEventListener('touchmove', e => {
+            if (!tooltipTimer) return; // No timer active
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            if (Math.abs(touchX - touchStartX) > MOVE_THRESHOLD || Math.abs(touchY - touchStartY) > MOVE_THRESHOLD) {
+                clearTimeout(tooltipTimer);
+                // If tooltip was already shown by hold and then user drags off, hide it
+                if (btn.dataset.tooltipShownByHold === 'true') {
+                    hideTooltip();
+                    btn.dataset.tooltipShownByHold = 'false';
+                }
+            }
+        }, { passive: false });
+
+        btn.addEventListener('touchend', e => {
+            // e.preventDefault(); // Careful with this, it can prevent click event for spell selection
+            clearTimeout(tooltipTimer);
+            if (btn.dataset.tooltipShownByHold === 'true') {
+                // If tooltip was shown by hold, we hide it and potentially consume the event
+                // so it doesn't also select the spell.
+                e.preventDefault(); // Prevent click if tooltip was shown
+                hideTooltip();
+                btn.dataset.tooltipShownByHold = 'false';
+            }
+            // If it was a quick tap (tooltipTimer didn't fire to show tooltip),
+            // the absence of e.preventDefault() here (or if it was conditional)
+            // allows the browser to generate a 'click' event, which setupSpellBarListeners handles.
+        }, { passive: false });
+        
+        btn.addEventListener('touchcancel', e => {
+            clearTimeout(tooltipTimer);
+            if (btn.dataset.tooltipShownByHold === 'true') {
+                hideTooltip();
+                btn.dataset.tooltipShownByHold = 'false';
+            }
+        }, { passive: false });
     }
 }

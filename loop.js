@@ -135,7 +135,7 @@ export function startGameLoop() {
         );
 
         drawProjectiles(ctx, projectiles, SPELLS);
-        drawDamageAnimations(ctx, damageAnimations);
+        drawDamageAnimations(ctx, damageAnimations, TILE_W); // Pass TILE_W
         drawBuffAnimations(ctx, buffAnimations);
         drawEndGameOverlay(ctx, canvas, gameOver, player);
         

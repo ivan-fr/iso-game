@@ -1,22 +1,37 @@
-/* =================================== */
-/* ===== MOBILE FIRST BASE STYLES ==== */
-/* =================================== */
+/* Base Game Styles */
+:root {
+    --primary: #3498db;
+    --primary-dark: #2980b9;
+    --danger: #e74c3c;
+    --danger-dark: #c0392b;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --info: #9b59b6;
+    --dark: #1a252f;
+    --darker: #0f1923;
+    --light: #ecf0f1;
+    --gray: #7f8c8d;
+    --overlay: rgba(0, 0, 0, 0.7);
+    --card-bg: rgba(44, 62, 80, 0.9);
+    --card-border: rgba(255, 255, 255, 0.1);
+}
 
-html body { /* More specific selector */
-    font-family: 'Press Start 2P', cursive;
+body {
+    font-family: 'Press Start 2P', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #1a252f;
-    color: #ecf0f1;
+    background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+    color: var(--light);
     overflow: hidden;
-    font-size: 14px; /* Mobile base font size */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    background-attachment: fixed;
 }
 
 .game-container {
     position: relative;
     width: 100%;
     height: 100vh;
-    padding: 5px; /* Mobile padding */
+    padding: 10px;
     box-sizing: border-box;
     background-color: transparent;
 }
@@ -38,218 +53,531 @@ canvas#gameCanvas {
 .ui-panel {
     position: absolute;
     z-index: 10;
-    background-color: rgba(44, 62, 80, 0.85);
-    padding: 8px 12px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(236, 240, 241, 0.2);
+    background: var(--card-bg);
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
     font-size: 0.8em;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    border-left: 3px solid var(--primary);
+}
+
+.ui-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 #turnOrder {
     position: absolute;
-    top: 10px; /* Mobile */
-    left: 10px; /* Mobile */
+    top: 20px;
+    left: 20px;
     z-index: 10;
-    background-color: rgba(30, 40, 50, 0.85); /* Match bottom controls bg */
-    padding: 6px 10px; /* Slightly more padding */
-    border-radius: 6px; /* Match bottom controls radius */
-    margin-bottom: 0;
-    font-size: 0.7em; /* Mobile */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35); /* Adjusted shadow */
-    border: 1px solid rgba(236, 240, 241, 0.15); /* Subtle border */
+    background: var(--card-bg);
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 3px solid var(--primary);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
 }
 
-.turnOrder-player, .turnOrder-boss, .turnOrder-enemy {
-    padding: 2px 6px; /* Mobile */
-    border-radius: 6px;
-    color: #fff;
+.turnOrder-label {
+    color: var(--gray);
+    font-size: 0.8em;
+    margin-right: 5px;
 }
-.turnOrder-player { background: #3498db; }
-.turnOrder-boss { background: #c0392b; }
-.turnOrder-enemy { background: #8e44ad; }
-.turnOrder-arrow { margin: 0 5px; }
+
+.turnOrder-item {
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.7em;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.turnOrder-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    z-index: 0;
+}
+
+.turnOrder-item.active {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px currentColor;
+    z-index: 1;
+}
+
+.turnOrder-item .icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.turnOrder-player { 
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.turnOrder-boss { 
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+    color: white;
+}
+
+.turnOrder-enemy { 
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+}
+
+.turnOrder-arrow {
+    color: var(--gray);
+    font-size: 1.2em;
+    margin: 0 2px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.turnOrder-arrow.active {
+    color: var(--warning);
+    transform: scale(1.2);
+    text-shadow: 0 0 10px var(--warning);
+}
+
 
 .info-bar {
     display: flex;
     flex-direction: column;
-    gap: 3px; /* Mobile */
+    gap: 10px;
     position: absolute;
-    top: 10px; /* Mobile */
-    right: 10px; /* Mobile */
+    top: 20px;
+    right: 20px;
     z-index: 10;
-    background-color: rgba(30, 40, 50, 0.85); /* Match bottom controls bg */
-    padding: 8px; /* Slightly more padding */
-    border-radius: 6px; /* Match bottom controls radius */
-    margin-bottom: 0;
-    font-size: 0.7em; /* Mobile */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35); /* Adjusted shadow */
-    border: 1px solid rgba(236, 240, 241, 0.15); /* Subtle border */
-    min-width: 150px; /* Mobile */
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    min-width: 200px;
+    border-left: 3px solid var(--warning);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.info-bar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .info-group {
-    background-color: rgba(0,0,0,0.3);
-    padding: 4px 6px; /* Mobile */
-    border-radius: 5px;
-    margin: 3px;
-    min-width: 100px; /* Mobile */
-    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin: 0;
+    min-width: 160px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-group::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.info-group:hover {
+    background: rgba(0, 0, 0, 0.3);
+    transform: translateX(3px);
+}
+
+.info-group-label {
+    font-size: 0.7em;
+    color: var(--gray);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.info-group-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: white;
 }
 
 #sheep-info-group {
-    background-color: rgba(142, 68, 173, 0.3);
+    background-color: rgba(142, 68, 173, 0.3); /* Purple tint */
+}
+
+#boss-info-group {
+    background-color: rgba(192, 57, 43, 0.3); /* Red tint */
 }
 
 .health-bar-container {
-    width: 70px; /* Mobile */
-    height: 7px; /* Mobile */
-    background-color: #555;
-    border: 1px solid #ecf0f1;
-    border-radius: 4px;
-    margin: 2px auto 0;
+    width: 100%;
+    height: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    margin: 5px 0;
     overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3) inset;
 }
 
 .health-bar {
     height: 100%;
-    background: linear-gradient(to bottom, #55efc4, #00b894);
     width: 100%;
-    transition: width 0.5s ease, background 0.5s ease;
-    border-radius: 3px 0 0 3px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
-#player-health-bar { background: linear-gradient(to bottom, #74b9ff, #0984e3); }
-#boss-health-bar { background: linear-gradient(to bottom, #fab1a0, #e17055); }
+
+.health-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    animation: healthBarShine 2s infinite linear;
+    opacity: 0.3;
+}
+
+@keyframes healthBarShine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+#player-health-bar {
+    background: linear-gradient(90deg, 
+        #3498db 0%, 
+        #2980b9 50%, 
+        #3498db 100%);
+}
+
+#boss-health-bar {
+    background: linear-gradient(90deg, 
+        #e74c3c 0%, 
+        #c0392b 50%, 
+        #e74c3c 100%);
+}
+
+/* Health bar animations */
+@keyframes healthPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.health-bar.low {
+    animation: healthPulse 1s infinite;
+}
+
+.health-bar.critical {
+    animation: healthPulse 0.5s infinite;
+    filter: brightness(1.5);
+}
+
+/* Damage indicator */
+@keyframes damageTaken {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.damage-taken {
+    animation: damageTaken 0.3s ease-out;
+}
 
 /* Bottom Controls */
 .bottom-controls-container {
     position: absolute;
-    bottom: 10px; /* Mobile */
-    left: 10px; /* Mobile: Position to the left */
-    transform: none; /* Mobile: Remove centering transform */
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 10;
     display: flex;
-    flex-direction: row; /* Arrange children (spellbar, controls) in a row */
-    align-items: center; /* Vertically align items in the row */
-    gap: 10px; /* Horizontal gap between spellbar and controls */
-    background-color: rgba(30, 40, 50, 0.85); /* Slightly darker, more opaque */
-    padding: 8px; /* Mobile: Increased padding */
-    border-radius: 6px; /* Slightly smaller radius */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4); /* Adjusted shadow */
-    width: auto; /* Mobile: Fit content width */
-    box-sizing: border-box;
-    border-top: 1px solid rgba(236, 240, 241, 0.2); /* Subtle top border */
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg);
+    padding: 15px 25px;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-left: 3px solid var(--primary);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.bottom-controls-container:hover {
+    transform: translateX(-50%) translateY(-5px);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
 }
 
 #spellBar {
     padding: 0;
     margin-bottom: 0;
     display: flex;
-    justify-content: flex-start; /* Mobile: Align spell buttons to the left */
-    gap: 8px; /* Mobile */
-    flex-wrap: wrap; /* Mobile */
+    justify-content: center;
+    gap: 15px;
 }
 
 .spell-btn {
-    background: none;
-    border: none;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     outline: none;
     cursor: pointer;
-    padding: 2px; /* Mobile */
-    border-radius: 4px; /* Add border-radius for consistency */
-    transition: background-color 0.2s ease, transform 0.2s ease; /* Add background transition */
-}
-.spell-btn svg {
-    transition: transform 0.2s ease; /* SVG transform is fine */
-    width: 32px; /* Mobile */
-    height: 32px; /* Mobile */
-    display: block; /* Helps with layout if SVGs have odd internal spacing */
-}
-.spell-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* Subtle background on hover */
-}
-.spell-btn:hover svg {
-    transform: scale(1.1);
-}
-.spell-btn:active, .spell-btn.active-spell { /* For pressed state or JS-set active spell */
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: scale(0.95);
-}
-.spell-btn.active-spell svg { /* If you add an 'active-spell' class via JS */
-    /* Optional: different style for the selected spell's icon, e.g., a border */
+    padding: 10px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.controls { /* Container for mobile/desktop buttons */
+.spell-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    z-index: 0;
+}
+
+.spell-btn svg {
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.spell-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    background: rgba(52, 152, 219, 0.2);
+    border-color: rgba(52, 152, 219, 0.5);
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+}
+
+.spell-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.spell-btn.cooldown {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+    cursor: not-allowed;
+}
+
+.spell-btn.cooldown::after {
+    content: attr(data-cooldown);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    z-index: 2;
+}
+
+/* Tooltip for spell buttons */
+.spell-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--primary);
+}
+
+.spell-btn:hover .spell-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-15px);
+}
+
+.controls {
     padding: 0;
     margin-top: 0;
     margin-bottom: 0;
-    width: auto; /* Mobile: Fit content width */
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; /* Mobile: Align action buttons to the left */
-    gap: 10px;
 }
 
-/* Desktop end turn button hidden by default (mobile first) */
-#end-turn-button {
-    display: none;
-}
-
-/* Mobile action buttons displayed by default */
-.mobile-action-button {
-    display: inline-block; /* Or flex if preferred */
-    padding: 8px 12px; /* Adjusted padding */
-    font-size: 0.85em; /* Slightly smaller font */
-    color: #ecf0f1;
-    background-color: #3a506b; /* Slightly different base color */
-    border: 1px solid #526f8f; /* Adjusted border */
-    border-radius: 4px; /* Consistent radius */
-    cursor: pointer;
-    margin: 0 5px; /* Keep margin */
-    min-width: 90px; /* Adjusted min-width */
-    text-align: center;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-.mobile-action-button:hover {
-    background-color: #4f6a8a; /* Lighter hover */
-}
-.mobile-action-button:active {
-    background-color: #2c3e50; /* Darker active */
-    transform: scale(0.96); /* Press effect */
-}
-
-/* Keyboard instructions hidden by default (mobile first) */
 .info {
-    display: none;
+    padding: 0;
+    margin-bottom: 0;
+    color: #bdc3c7;
+    font-size: 0.75em;
+    text-align: center;
 }
+.info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.info li {
+    display: inline; /* Or use flex for better spacing if needed */
+    margin: 0 5px;
+}
+
 
 /* Message Box */
+@keyframes slideInDown {
+    from {
+        transform: translateX(-50%) translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOutUp {
+    from {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-50%) translateY(-100%);
+        opacity: 0;
+    }
+}
+
 .message-box {
     position: fixed;
-    top: 20px;
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(44, 62, 80, 0.9);
-    color: #ecf0f1;
-    padding: 10px 20px;
+    background: var(--card-bg);
+    color: var(--light);
+    padding: 12px 24px;
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 90%;
+    animation: slideInDown 0.5s ease-out forwards;
+    border-left: 3px solid var(--primary);
+    backdrop-filter: blur(8px);
+}
+
+.message-box.hide {
+    animation: fadeOutUp 0.5s ease-in forwards;
+}
+
+.message-box.success {
+    border-left-color: var(--success);
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.1) 0%, rgba(44, 62, 80, 0.9) 100%);
+}
+
+.message-box.error {
+    border-left-color: var(--danger);
+    background: linear-gradient(90deg, rgba(231, 76, 60, 0.1) 0%, rgba(44, 62, 80, 0.9) 100%);
+}
+
+.message-box.warning {
+    border-left-color: var(--warning);
+    background: linear-gradient(90deg, rgba(243, 156, 18, 0.1) 0%, rgba(44, 62, 80, 0.9) 100%);
+}
+
+.message-box .icon {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.message-box.success .icon {
+    color: var(--success);
+}
+
+.message-box.error .icon {
+    color: var(--danger);
+}
+
+.message-box.warning .icon {
+    color: var(--warning);
+}
+
+.message-box {
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
     pointer-events: none;
     font-size: 0.8em;
 }
-.message-box.show { opacity: 1; }
+.message-box.show {
+    opacity: 1;
+}
 
 /* Spell Tooltip */
 .spell-tooltip-base {
     position: fixed;
     z-index: 200;
     pointer-events: none;
-    background: rgba(44,62,80,0.97);
+    background: rgba(44, 62, 80, 0.97);
     color: #fff;
     padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    max-width: 250px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--primary);
+    backdrop-filter: blur(8px);
     border-radius: 8px;
     box-shadow: 0 2px 8px #222;
     font-size: 0.8em;
@@ -258,356 +586,1312 @@ canvas#gameCanvas {
     line-height: 1.5;
 }
 
+
 /* UI Container (Inventory Button and Player Stats) */
 #ui-container {
     position: absolute;
-    bottom: 10px; /* Mobile: Position to bottom */
-    right: 10px; /* Mobile: Keep on right */
-    top: auto; /* Mobile: Ensure top is not interfering */
-    z-index: 99;
+    /* top: 10px; */
+    /* left: 10px; */
+    bottom: 15px; /* Position bottom */
+    right: 15px;  /* Position right */
+    z-index: 99; 
     display: flex;
-    gap: 8px; /* Increased gap */
+    gap: 10px;
     align-items: center;
-    padding: 6px; /* Increased padding */
-    border-radius: 6px; /* Consistent radius */
-    background-color: rgba(30, 40, 50, 0.85); /* Match other panels */
-    border: 1px solid rgba(236, 240, 241, 0.15); /* Subtle border */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35); /* Consistent shadow */
+    /* background-color: rgba(255, 255, 0, 0.5); */ /* DEBUG: Yellow background - removed */
+    padding: 5px;
+    border-radius: 6px;
 }
 
 #inventory-button {
+    /* Reset defaults */
     padding: 0;
     font-size: inherit;
     border: none;
     background: none;
     box-shadow: none;
-    color: #ecf0f1;
+    color: #ecf0f1; /* Light color for SVG stroke */
+
+    /* Icon button style */
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px; /* Slightly larger tap target */
-    height: 36px; /* Slightly larger tap target */
-    background-color: #3a506b; /* Match mobile action buttons */
-    border: 1px solid #526f8f; /* Match mobile action buttons */
-    border-radius: 4px; /* Consistent radius */
+    width: 36px; /* Explicit size */
+    height: 36px;
+    background-color: rgba(44, 62, 80, 0.7); /* Match panels */
+    border: 1px solid rgba(236, 240, 241, 0.2);
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: background-color 0.2s ease;
 }
+
 #inventory-button:hover {
-    background-color: #4f6a8a; /* Lighter hover */
+    background-color: rgba(52, 73, 94, 0.9); /* Darker on hover */
 }
-#inventory-button:active {
-    background-color: #2c3e50; /* Darker active */
-    transform: scale(0.96);
-}
+
 #inventory-button svg {
-    width: 20px; /* Slightly larger icon */
-    height: 20px; /* Slightly larger icon */
+    width: 20px; /* Control SVG size */
+    height: 20px;
 }
 
-#player-stats {
-    background: transparent; /* Remove its own background if parent has one */
-    padding: 4px 8px; /* Adjusted padding */
-    border-radius: 4px; /* Consistent radius */
-    font-size: 0.7em; /* Mobile */
-    border: none; /* Remove its own border if parent has one */
-    color: #ecf0f1;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 2px 6px; /* Mobile */
-    min-width: 140px; /* Mobile */
-}
-#player-stats > div { display: contents; }
-#player-stats > div > span:first-child {
-    color: #bdc3c7;
-    text-align: right;
-}
-#player-stats > div > span:last-child {
-    font-weight: bold;
-    color: #f1c40f;
-    white-space: nowrap;
-}
-#ui-player-dmg-bonus {
-    font-weight: bold;
-    color: #f1c40f;
-}
-
-/* Modal Base Styles (Mobile First) */
+/* Modal Base Styles */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
+    display: none; /* Hidden by default unless active-tab-content is present */
+    padding: 6px 12px;
+    animation: fadeEffect 0.5s; /* Fading effect */
+}
+.active-tab-content {
+    display: block;
+}
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.6);
-    opacity: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+    opacity: 0; /* Start transparent */
     transition: opacity 0.3s ease-in-out;
 }
 
 .modal-content {
-    background-color: #2c2f33;
-    color: #ffffff;
-    margin: 5% auto; /* Mobile */
-    padding: 20px; /* Mobile */
+    background-color: #2c2f33; /* Dark background */
+    color: #ffffff; /* White text */
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 25px;
     border: 1px solid #888;
-    width: 90%; /* Mobile */
-    max-width: none; /* Mobile: allow full use of small screen width */
+    width: 80%; /* Could be more specific */
+    max-width: 500px; /* Maximum width */
     border-radius: 8px;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.5);
-    text-align: left;
-    font-family: sans-serif;
-    position: relative;
-    font-size: 0.9em; /* Mobile */
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5); /* More pronounced shadow */
+    text-align: left; /* Align content left */
+    font-family: sans-serif; /* More readable font for content */
+    position: relative; /* Needed for close button positioning */
 }
 
 .close-button {
     color: #aaa;
     position: absolute;
-    top: 10px; /* Mobile */
-    right: 10px; /* Mobile */
-    font-size: 32px; /* Mobile: Larger tap target */
+    top: 15px; /* Adjust position */
+    right: 15px;
+    font-size: 28px;
     font-weight: bold;
-    line-height: 32px; /* Mobile */
-    text-align: center; /* Mobile */
-    width: 32px; /* Mobile */
-    height: 32px; /* Mobile */
-    z-index: 1;
+    line-height: 1;
+    z-index: 1; /* Ensure it's above content */
     background: none;
     border: none;
     padding: 0;
-    cursor: pointer;
-}
-.close-button:hover, .close-button:focus {
-    color: #fff;
-    text-decoration: none;
 }
 
+.close-button:hover,
+.close-button:focus {
+    color: #fff; /* Brighter hover */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Use Press Start for modal titles */
 .modal h2, .modal h3 {
     font-family: 'Press Start 2P', cursive;
-    color: #f1c40f;
+    color: #f1c40f; /* Gold color for titles */
     margin-top: 0;
-    border-bottom: 1px solid #555;
-    padding-bottom: 8px; /* Mobile */
-    margin-bottom: 12px; /* Mobile */
-    font-size: 1.1em; /* Mobile */
+    border-bottom: 1px solid #555; /* Darker border */
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.2em; /* Adjust size */
     text-align: center;
 }
+
 .modal h3 {
-    font-size: 0.9em; /* Mobile */
-    color: #bdc3c7;
+    font-size: 1em; /* Slightly smaller */
+    color: #bdc3c7; /* Lighter grey for subtitle */
     border-bottom: none;
 }
 
-/* End Match Screen Specifics (Mobile Base) */
-#end-match-screen .modal-content { border: 2px solid #c0392b; }
-#end-match-screen[data-victory="true"] .modal-content { border: 2px solid #27ae60; }
-#end-match-title { margin-top: 0; color: #e74c3c; }
-#end-match-screen[data-victory="true"] #end-match-title { color: #2ecc71; }
-#final-score { font-size: 1.2em; margin-bottom: 20px; }
+/* Style for the end match screen specifically */
+#end-match-screen .modal-content {
+    border: 2px solid #c0392b; /* Red border for game over */
+}
+
+#end-match-screen[data-victory="true"] .modal-content { /* Style differently on victory */
+    border: 2px solid #27ae60; /* Green border for victory */
+}
+
+#end-match-title {
+    margin-top: 0;
+    color: #e74c3c; /* Red title for game over */
+}
+#end-match-screen[data-victory="true"] #end-match-title {
+     color: #2ecc71; /* Green title for victory */
+}
+
+#final-score {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
 #drop-summary {
-    margin-top: 20px; padding-top: 15px; border-top: 1px solid #555; text-align: left;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #555;
+    text-align: left;
 }
-#drop-summary h3 { margin-bottom: 10px; color: #f1c40f; text-align: center; }
-#drop-summary ul { list-style: none; padding: 0; }
-#drop-summary li { margin-bottom: 8px; display: flex; align-items: center; }
-.drop-icon { width: 24px; height: 24px; margin-right: 10px; vertical-align: middle; }
-
-#end-match-screen button {
-     padding: 12px 15px; /* Mobile */
-     font-size: 1em; /* Mobile */
-     cursor: pointer; color: white; border: none; border-radius: 5px;
-     margin: 10px 5px 0;
- }
-#restart-button { background-color: #d9534f; }
-#restart-button:hover { background-color: #c9302c; }
-#next-room-button { /* ID from HTML */
-     background-color: #5cb85c;
-     /* display: none; /* Controlled by JS or specific game states */
- }
-#next-room-button:hover { background-color: #4cae4c; }
-.next-room-button-style { /* Class from CSS, ensure it applies if used */
-    display: none;
-    background-color: #5cb85c;
+#drop-summary h3 {
+    margin-bottom: 10px;
+    color: #f1c40f; /* Gold color for header */
+    text-align: center;
 }
-.next-room-button-style:hover { background-color: #4cae4c; }
+#drop-summary ul {
+    list-style: none;
+    padding: 0;
+}
+#drop-summary li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+.drop-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
 
-
-/* Inventory Specific Styles (Mobile Base) */
+/* Inventory Specific Styles */
 #equipment-panel {
-    margin-bottom: 20px; padding: 15px; background-color: rgba(0,0,0,0.2); border-radius: 5px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: rgba(0,0,0,0.2); /* Darker transparent background */
+    border-radius: 5px;
 }
+
 .equipment-slots-container {
     display: flex;
-    gap: 8px; /* Mobile */
+    gap: 10px;
     flex-wrap: wrap;
-    justify-content: center; /* Mobile */
 }
+
 .slot {
-    width: 60px; /* Mobile */
-    height: 60px; /* Mobile */
-    border: 2px dashed #555; border-radius: 5px; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; background-color: rgba(0,0,0,0.15);
-    font-size: 0.7em; /* Mobile */
-    color: #aaa; text-align: center; cursor: default;
+    width: 70px;
+    height: 70px;
+    border: 2px dashed #555; /* Darker dashed border */
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.15); /* Darker slot background */
+    font-size: 0.8em;
+    color: #aaa; /* Lighter text for empty */
+    text-align: center;
+    cursor: default;
     transition: background-color 0.2s, border-color 0.2s;
 }
-.slot.empty:hover { background-color: rgba(255,255,255,0.05); border-color: #777; }
-.slot:not(.empty) {
-    border-style: solid; border-color: #888; background-color: rgba(255, 255, 255, 0.05); cursor: pointer;
+
+.slot.empty:hover {
+    background-color: rgba(255,255,255,0.05);
+    border-color: #777;
 }
-.slot:not(.empty):hover { background-color: rgba(255, 255, 255, 0.1); border-color: #aaa; }
+
+.slot:not(.empty) {
+    border-style: solid;
+    border-color: #888;
+    background-color: rgba(255, 255, 255, 0.05); /* Slightly lighter background when filled */
+    cursor: pointer; /* Allow clicking to unequip */
+}
+
+.slot:not(.empty):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #aaa;
+}
+
 .slot img {
-    max-width: 30px; /* Mobile */
-    max-height: 30px; /* Mobile */
+    max-width: 40px;
+    max-height: 40px;
     margin-bottom: 3px;
 }
+
 .slot span {
-    font-size: 0.75em; color: #ccc; display: block; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; max-width: 50px; /* Adjusted for smaller slot */
-}
-
-/* Tab Styles (Mobile Base) */
-.tab-buttons {
-    overflow: hidden; border-bottom: 1px solid #555; margin-bottom: 15px;
-    margin-left: -20px; /* Match mobile padding */
-    margin-right: -20px; /* Match mobile padding */
-    padding-left: 20px; /* Match mobile padding */
-}
-.tab-buttons button {
-    background-color: transparent; float: left; border: none; outline: none; cursor: pointer;
-    padding: 12px 10px; /* Mobile */
-    transition: 0.3s;
-    font-size: 0.9em; /* Mobile */
-    color: #aaa; border-bottom: 3px solid transparent; margin-bottom: -1px;
-}
-.tab-buttons button:hover { background-color: rgba(255,255,255, 0.05); color: #fff; }
-.tab-buttons button.active {
-    background-color: transparent; color: #f1c40f; border-bottom: 3px solid #f1c40f;
-}
-.tab-content {
-    display: none; padding: 6px 12px; animation: fadeEffect 0.5s;
-}
-.active-tab-content { /* This class is for the content DIV */
+    font-size: 0.75em;
+    color: #ccc; /* Lighter text for item name */
     display: block;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+     max-width: 60px; /* Prevent long names from overflowing */
 }
-@keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
 
-/* Inventory Grid (Mobile Base) */
+
+/* Tab Styles */
+.tab-buttons {
+    overflow: hidden;
+    border-bottom: 1px solid #555; /* Darker border */
+    margin-bottom: 15px;
+    margin-left: -25px; /* Extend to modal edge */
+    margin-right: -25px;
+    padding-left: 25px; /* Re-add padding */
+}
+
+.tab-buttons button {
+    background-color: transparent; /* Transparent background */
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 1em; /* Adjusted size */
+    color: #aaa; /* Dim text color */
+    border-bottom: 3px solid transparent; /* Underline effect preparation */
+    margin-bottom: -1px; /* Align with border */
+}
+
+.tab-buttons button:hover {
+    background-color: rgba(255,255,255, 0.05); /* Subtle hover */
+    color: #fff;
+}
+
+.tab-buttons button.active {
+    background-color: transparent; /* No background */
+    color: #f1c40f; /* Gold color for active */
+    border-bottom: 3px solid #f1c40f; /* Gold underline */
+}
+
+.tab-content {
+    display: none; /* Hidden by default */
+    padding: 6px 12px;
+    animation: fadeEffect 0.5s; /* Fading effect */
+}
+
+/* Fade in tabs */
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* Inventory Grid */
 .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Mobile */
-    gap: 8px; /* Mobile */
-    max-height: 250px; /* Mobile */
-    overflow-y: auto; padding: 10px; background-color: rgba(0,0,0,0.1);
-    border-radius: 5px; border: 1px solid #444;
-}
-.inventory-item {
-    border: 1px solid #555; border-radius: 5px; padding: 5px;
-    background-color: rgba(255, 255, 255, 0.05); display: flex; flex-direction: column;
-    align-items: center; justify-content: space-between; text-align: center;
-    height: 90px; /* Mobile */
-    cursor: pointer; position: relative;
-    transition: transform 0.1s, box-shadow 0.1s, background-color 0.1s;
-}
-.inventory-item:hover {
-    transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.25);
-    background-color: rgba(255, 255, 255, 0.1); border-color: #777;
-}
-.inventory-item img {
-    max-width: 40px; /* Mobile */
-    max-height: 40px; /* Mobile */
-    margin-bottom: 5px; object-fit: contain;
-}
-.inventory-item-name {
-    font-size: 0.75em; /* Mobile */
-    color: #ddd; display: block; width: 100%;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.inventory-item-count {
-    position: absolute; bottom: 2px; right: 4px; background-color: rgba(0, 0, 0, 0.7);
-    color: white; font-size: 0.75em; padding: 1px 4px; border-radius: 3px;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    max-height: 300px; /* Limit height and allow scroll */
+    overflow-y: auto;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.1); /* Darker grid background */
+    border-radius: 5px;
+    border: 1px solid #444; /* Darker border */
 }
 
-/* Crafting List (Mobile Base) */
-#crafting-list {
-     max-height: 280px; /* Mobile */
-     overflow-y: auto; padding-right: 10px;
-}
-.crafting-recipe {
+.inventory-item {
+    border: 1px solid #555; /* Darker border */
+    border-radius: 5px;
+    padding: 5px;
+    background-color: rgba(255, 255, 255, 0.05); /* Darker item background */
     display: flex;
-    flex-direction: column; /* Mobile */
-    gap: 10px; /* Mobile */
+    flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    border: 1px solid #555;
-    padding: 8px; /* Mobile */
-    margin-bottom: 10px; border-radius: 5px; background-color: rgba(0, 0, 0, 0.15);
+    text-align: center;
+    height: 100px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.1s, box-shadow 0.1s, background-color 0.1s;
 }
+
+.inventory-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    background-color: rgba(255, 255, 255, 0.1); /* Slightly lighter on hover */
+    border-color: #777;
+}
+
+.inventory-item img {
+    max-width: 50px;
+    max-height: 50px;
+    margin-bottom: 5px;
+    object-fit: contain;
+}
+
+.inventory-item-name {
+    font-size: 0.8em;
+    color: #ddd; /* Lighter text */
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.inventory-item-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker count bg */
+    color: white;
+    font-size: 0.75em;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* Crafting List */
+#crafting-list {
+     max-height: 350px; /* Adjust as needed */
+     overflow-y: auto;
+     padding-right: 10px; /* Space for scrollbar */
+}
+
+.crafting-recipe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #555; /* Darker border */
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.15); /* Darker recipe background */
+}
+
 .crafting-recipe-output {
-    display: flex; flex-direction: column; align-items: center; text-align: center;
-    min-width: 80px; cursor: help;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 80px;
+     cursor: help; /* Indicate tooltip */
 }
-.crafting-recipe-output img { width: 40px; height: 40px; margin-bottom: 5px; }
-.crafting-recipe-output span { font-size: 0.8em; font-weight: bold; color: #eee; }
+
+.crafting-recipe-output img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+.crafting-recipe-output span {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #eee; /* Lighter text */
+}
+
 .crafting-recipe-ingredients {
-    display: flex; flex-grow: 1;
-    margin: 0; /* Mobile */
-    flex-wrap: wrap; gap: 8px;
-    justify-content: center; /* Mobile */
+    display: flex;
+    flex-grow: 1;
+    margin: 0 15px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
-.ingredient { display: flex; align-items: center; cursor: help; }
-.ingredient img { width: 24px; height: 24px; margin-right: 4px; }
-.ingredient span { font-size: 0.85em; color: #ccc; }
-.ingredient .required { font-weight: bold; margin-right: 2px; color: #fff; }
-.ingredient .available { color: #2ecc71; }
-.ingredient .missing { color: #e74c3c; }
+
+.ingredient {
+    display: flex;
+    align-items: center;
+     cursor: help; /* Indicate tooltip */
+}
+
+.ingredient img {
+    width: 24px;
+    height: 24px;
+    margin-right: 4px;
+}
+
+.ingredient span {
+    font-size: 0.85em;
+    color: #ccc; /* Lighter text */
+}
+
+.ingredient .required {
+    font-weight: bold;
+    margin-right: 2px;
+    color: #fff; /* White for required */
+}
+.ingredient .available {
+    color: #2ecc71; /* Brighter green */
+}
+.ingredient .missing {
+    color: #e74c3c; /* Brighter red */
+}
+
 .craft-button {
-    padding: 10px; /* Mobile */
-    background-color: #5cb85c; color: white; border: none; border-radius: 4px;
-    cursor: pointer; transition: background-color 0.2s;
-    width: 100%; /* Mobile */
+    padding: 8px 12px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
-.craft-button:hover:not(:disabled) { background-color: #4cae4c; }
-.craft-button:disabled { background-color: #cccccc; cursor: not-allowed; }
+
+.craft-button:hover:not(:disabled) {
+    background-color: #4cae4c;
+}
+
+.craft-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Rename Game Over to End Match */
+.end-match-content {
+    text-align: center;
+}
+
+#end-match-screen button {
+     padding: 10px 20px;
+     font-size: 1.1em;
+     cursor: pointer;
+     color: white;
+     border: none;
+     border-radius: 5px;
+     margin: 10px 5px 0; /* Add some margin */
+ }
+
+#restart-button {
+    background-color: #d9534f; /* Reddish for restart/game over */
+}
+#restart-button:hover {
+    background-color: #c9302c;
+}
+
+#next-room-button {
+     background-color: #5cb85c; /* Green for next/continue */
+ }
+ #next-room-button:hover {
+     background-color: #4cae4c;
+ }
 
 /* Tooltip */
 .tooltip {
-     display: none; position: absolute; background-color: rgba(40, 40, 40, 0.9);
-     color: #fff; padding: 8px 12px; border-radius: 5px; font-size: 0.9em;
-     z-index: 101; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-     pointer-events: none;
+     display: none;
+     position: absolute;
+     background-color: rgba(40, 40, 40, 0.9);
+     color: #fff;
+     padding: 8px 12px;
+     border-radius: 5px;
+     font-size: 0.9em;
+     z-index: 101; /* Above modal content */
+     white-space: nowrap;
+     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+     pointer-events: none; /* Allow clicks to pass through */
 }
-.tooltip-title {
-    font-weight: bold; font-size: 1.1em; margin-bottom: 4px;
-    border-bottom: 1px solid #666; padding-bottom: 3px;
-}
-.tooltip-type {
-    font-style: italic; color: #ccc; margin-bottom: 5px; font-size: 0.9em;
-}
-.tooltip-stat { color: #87CEEB; font-weight: bold; }
 
-/* Orientation Blocker (from index.html) */
-#orientation-blocker {
-    /* display: none; /* Shown by JS when needed, but default in HTML is no display style */
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.95);
-    color: white;
-    z-index: 9999;
-    display: flex; /* Use flex to center, will be overridden by JS if needed */
-    align-items: center;
-    justify-content: center;
+.tooltip-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #666;
+    padding-bottom: 3px;
+}
+
+.tooltip-type {
+    font-style: italic;
+    color: #ccc;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.tooltip-stat {
+    color: #87CEEB; /* Light blue for stats */
+    font-weight: bold;
+}
+
+/* Inventory modal styling */
+#inventory-modal .modal-content {
+    /* ... existing code ... */
+}
+
+/* Style the player stats display */
+#player-stats {
+    background: rgba(44, 62, 80, 0.8); /* Darker, more opaque background */
+    padding: 8px 12px; /* Increased padding */
+    border-radius: 6px;
+    font-size: 0.85em; /* Slightly larger font */
+    border: 1px solid rgba(236, 240, 241, 0.3); /* Slightly stronger border */
+    color: #ecf0f1; /* Light text */
+    display: grid;
+    grid-template-columns: auto 1fr; /* Label width auto, Value takes rest */
+    gap: 4px 10px; /* Row gap, Column gap */
+    min-width: 180px; /* Ensure minimum width */
+}
+
+#player-stats > div { /* Target the direct div children we just added */
+    display: contents; /* Make the div act as if its children are direct grid items */
+}
+
+#player-stats > div > span:first-child { /* Style for the Label (e.g., HP:) */
+    color: #bdc3c7; /* Lighter grey for labels */
+    text-align: right;
+}
+
+#player-stats > div > span:last-child { /* Style for the Value part */
+    font-weight: bold;
+    color: #f1c40f; /* Gold color for numbers/values */
+    white-space: nowrap;
+}
+
+/* Override for the Dmg Bonus value span which isn't nested */
+#ui-player-dmg-bonus {
+    font-weight: bold;
+    color: #f1c40f;
+}
+
+/* Remove old rule targeting nested spans */
+/* #player-stats span span { ... } */
+
+/* Modal Base Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 100; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+    opacity: 0; /* Start transparent */
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+    background-color: #2c2f33; /* Dark background */
+    color: #ffffff; /* White text */
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more specific */
+    max-width: 500px; /* Maximum width */
+    border-radius: 8px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5); /* More pronounced shadow */
+    text-align: left; /* Align content left */
+    font-family: sans-serif; /* More readable font for content */
+}
+
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 15px; /* Adjust position */
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 1; /* Ensure it's above content */
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #fff; /* Brighter hover */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Use Press Start for modal titles */
+.modal h2, .modal h3 {
+    font-family: 'Press Start 2P', cursive;
+    color: #f1c40f; /* Gold color for titles */
+    margin-top: 0;
+    border-bottom: 1px solid #555; /* Darker border */
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.2em; /* Adjust size */
     text-align: center;
 }
-.orientation-message {
-    padding: 20px;
+
+.modal h3 {
+    font-size: 1em; /* Slightly smaller */
+    color: #bdc3c7; /* Lighter grey for subtitle */
+    border-bottom: none;
+}
+
+/* Style for the end match screen specifically */
+#end-match-screen .modal-content {
+    border: 2px solid #c0392b; /* Red border for game over */
+}
+
+#end-match-screen[data-victory="true"] .modal-content { /* Style differently on victory */
+    border: 2px solid #27ae60; /* Green border for victory */
+}
+
+#end-match-title {
+    margin-top: 0;
+    color: #e74c3c; /* Red title for game over */
+}
+#end-match-screen[data-victory="true"] #end-match-title {
+     color: #2ecc71; /* Green title for victory */
+}
+
+#final-score {
     font-size: 1.2em;
+    margin-bottom: 20px;
 }
-.orientation-message svg {
+
+#drop-summary {
     margin-top: 20px;
-    animation: spin 2s linear infinite;
+    padding-top: 15px;
+    border-top: 1px solid #555;
+    text-align: left;
 }
-@keyframes spin { 100% { transform:rotate(360deg); } }
+#drop-summary h3 {
+    margin-bottom: 10px;
+    color: #f1c40f; /* Gold color for header */
+    text-align: center;
+}
+#drop-summary ul {
+    list-style: none;
+    padding: 0;
+}
+#drop-summary li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+.drop-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+/* Inventory Specific Styles */
+#equipment-panel {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: rgba(0,0,0,0.2); /* Darker transparent background */
+    border-radius: 5px;
+}
+
+.equipment-slots-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.slot {
+    width: 70px;
+    height: 70px;
+    border: 2px dashed #555; /* Darker dashed border */
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.15); /* Darker slot background */
+    font-size: 0.8em;
+    color: #aaa; /* Lighter text for empty */
+    text-align: center;
+    cursor: default;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.slot.empty:hover {
+    background-color: rgba(255,255,255,0.05);
+    border-color: #777;
+}
+
+.slot:not(.empty) {
+    border-style: solid;
+    border-color: #888;
+    background-color: rgba(255, 255, 255, 0.05); /* Slightly lighter background when filled */
+    cursor: pointer; /* Allow clicking to unequip */
+}
+
+.slot:not(.empty):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #aaa;
+}
+
+.slot img {
+    max-width: 40px;
+    max-height: 40px;
+    margin-bottom: 3px;
+}
+
+.slot span {
+    font-size: 0.75em;
+    color: #ccc; /* Lighter text for item name */
+    display: block;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+     max-width: 60px; /* Prevent long names from overflowing */
+}
+
+
+/* Tab Styles */
+.tab-buttons {
+    overflow: hidden;
+    border-bottom: 1px solid #555; /* Darker border */
+    margin-bottom: 15px;
+    margin-left: -25px; /* Extend to modal edge */
+    margin-right: -25px;
+    padding-left: 25px; /* Re-add padding */
+}
+
+.tab-buttons button {
+    background-color: transparent; /* Transparent background */
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 1em; /* Adjusted size */
+    color: #aaa; /* Dim text color */
+    border-bottom: 3px solid transparent; /* Underline effect preparation */
+    margin-bottom: -1px; /* Align with border */
+}
+
+.tab-buttons button:hover {
+    background-color: rgba(255,255,255, 0.05); /* Subtle hover */
+    color: #fff;
+}
+
+.tab-buttons button.active {
+    background-color: transparent; /* No background */
+    color: #f1c40f; /* Gold color for active */
+    border-bottom: 3px solid #f1c40f; /* Gold underline */
+}
+
+.tab-content {
+    display: none; /* Hidden by default */
+    padding: 6px 12px;
+    animation: fadeEffect 0.5s; /* Fading effect */
+}
+
+/* Fade in tabs */
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* Inventory Grid */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    max-height: 300px; /* Limit height and allow scroll */
+    overflow-y: auto;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.1); /* Darker grid background */
+    border-radius: 5px;
+    border: 1px solid #444; /* Darker border */
+}
+
+.inventory-item {
+    border: 1px solid #555; /* Darker border */
+    border-radius: 5px;
+    padding: 5px;
+    background-color: rgba(255, 255, 255, 0.05); /* Darker item background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    height: 100px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.1s, box-shadow 0.1s, background-color 0.1s;
+}
+
+.inventory-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    background-color: rgba(255, 255, 255, 0.1); /* Slightly lighter on hover */
+    border-color: #777;
+}
+
+.inventory-item img {
+    max-width: 50px;
+    max-height: 50px;
+    margin-bottom: 5px;
+    object-fit: contain;
+}
+
+.inventory-item-name {
+    font-size: 0.8em;
+    color: #ddd; /* Lighter text */
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.inventory-item-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker count bg */
+    color: white;
+    font-size: 0.75em;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* Crafting List */
+#crafting-list {
+     max-height: 350px; /* Adjust as needed */
+     overflow-y: auto;
+     padding-right: 10px; /* Space for scrollbar */
+}
+
+.crafting-recipe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #555; /* Darker border */
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.15); /* Darker recipe background */
+}
+
+.crafting-recipe-output {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 80px;
+     cursor: help; /* Indicate tooltip */
+}
+
+.crafting-recipe-output img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+.crafting-recipe-output span {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #eee; /* Lighter text */
+}
+
+.crafting-recipe-ingredients {
+    display: flex;
+    flex-grow: 1;
+    margin: 0 15px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ingredient {
+    display: flex;
+    align-items: center;
+     cursor: help; /* Indicate tooltip */
+}
+
+.ingredient img {
+    width: 24px;
+    height: 24px;
+    margin-right: 4px;
+}
+
+.ingredient span {
+    font-size: 0.85em;
+    color: #ccc; /* Lighter text */
+}
+
+.ingredient .required {
+    font-weight: bold;
+    margin-right: 2px;
+    color: #fff; /* White for required */
+}
+.ingredient .available {
+    color: #2ecc71; /* Brighter green */
+}
+.ingredient .missing {
+    color: #e74c3c; /* Brighter red */
+}
+
+.craft-button {
+    padding: 8px 12px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.craft-button:hover:not(:disabled) {
+    background-color: #4cae4c;
+}
+
+.craft-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Rename Game Over to End Match */
+.end-match-content {
+    text-align: center;
+}
+
+#end-match-screen button {
+     padding: 10px 20px;
+     font-size: 1.1em;
+     cursor: pointer;
+     color: white;
+     border: none;
+     border-radius: 5px;
+     margin: 10px 5px 0; /* Add some margin */
+ }
+
+#restart-button {
+    background-color: #d9534f; /* Reddish for restart/game over */
+}
+#restart-button:hover {
+    background-color: #c9302c;
+}
+
+#next-room-button {
+     background-color: #5cb85c; /* Green for next/continue */
+ }
+ #next-room-button:hover {
+     background-color: #4cae4c;
+ }
+
+/* Tooltip */
+.tooltip {
+     display: none;
+     position: absolute;
+     background-color: rgba(40, 40, 40, 0.9);
+     color: #fff;
+     padding: 8px 12px;
+     border-radius: 5px;
+     font-size: 0.9em;
+     z-index: 101; /* Above modal content */
+     white-space: nowrap;
+     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+     pointer-events: none; /* Allow clicks to pass through */
+}
+
+.tooltip-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #666;
+    padding-bottom: 3px;
+}
+
+.tooltip-type {
+    font-style: italic;
+    color: #ccc;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.tooltip-stat {
+    color: #87CEEB; /* Light blue for stats */
+    font-weight: bold;
+}
+
+/* Inventory modal styling */
+#inventory-modal .modal-content {
+    /* ... existing code ... */
+}
+
+/* Style the player stats display */
+#player-stats {
+    background: rgba(44, 62, 80, 0.8); /* Darker, more opaque background */
+    padding: 8px 12px; /* Increased padding */
+    border-radius: 6px;
+    font-size: 0.85em; /* Slightly larger font */
+    border: 1px solid rgba(236, 240, 241, 0.3); /* Slightly stronger border */
+    color: #ecf0f1; /* Light text */
+    display: grid;
+    grid-template-columns: auto 1fr; /* Label width auto, Value takes rest */
+    gap: 4px 10px; /* Row gap, Column gap */
+    min-width: 180px; /* Ensure minimum width */
+}
+
+/* Removed duplicated modal styles that were here */
+
+.next-room-button-style {
+    display: none; /* Initially hidden */
+    background-color: #5cb85c; /* Green for next/continue */
+}
+.next-room-button-style:hover {
+    background-color: #4cae4c;
+}
+
+
+/* Media Queries for Responsiveness */
+
+/* Tablet - max-width: 1024px */
+@media (max-width: 1024px) {
+    /* Adjustments for tablets */
+    .modal-content {
+        margin: 10% auto;
+        width: 85%;
+        max-width: 600px; /* Slightly wider for tablets */
+    }
+
+    #player-stats {
+        font-size: 0.8em;
+        min-width: 160px;
+    }
+
+    .bottom-controls-container {
+        padding: 8px;
+        gap: 6px;
+    }
+    #spellBar {
+        gap: 10px;
+    }
+    .spell-btn svg {
+        width: 36px;
+        height: 36px;
+    }
+    #end-turn-button {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+    .info {
+        font-size: 0.7em;
+    }
+    .info li {
+        margin: 0 3px;
+    }
+
+}
+
+/* Mobile - max-width: 768px */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px; /* Adjust base font size for mobile if needed */
+    }
+
+    .game-container {
+        padding: 5px; /* Reduce padding on very small screens */
+    }
+
+    #turnOrder {
+        top: 10px;
+        left: 10px;
+        padding: 4px 8px;
+        font-size: 0.7em;
+    }
+    .turnOrder-player, .turnOrder-boss, .turnOrder-enemy {
+        padding: 2px 6px;
+    }
+
+    .info-bar {
+        top: 10px;
+        right: 10px;
+        padding: 6px;
+        font-size: 0.7em;
+        min-width: 150px; /* Adjust min-width */
+        gap: 3px;
+    }
+    .info-group {
+        padding: 4px 6px;
+        min-width: 100px; /* Adjust min-width */
+    }
+    .health-bar-container {
+        width: 70px; /* Smaller health bars */
+        height: 7px;
+    }
+
+    .bottom-controls-container {
+        bottom: 10px;
+        padding: 5px;
+        gap: 5px;
+        width: calc(100% - 20px); /* Take more width */
+        box-sizing: border-box;
+    }
+
+    #spellBar {
+        gap: 8px;
+        flex-wrap: wrap; /* Allow spell buttons to wrap */
+        justify-content: space-around; /* Better spacing for wrapped items */
+    }
+    .spell-btn svg {
+        width: 32px; /* Smaller spell icons */
+        height: 32px;
+    }
+    .spell-btn {
+        padding: 2px; /* Add some padding for touch */
+    }
+
+    #end-turn-button {
+        padding: 10px 12px; /* Larger touch target */
+        font-size: 0.85em;
+        width: 100%; /* Make end turn button full width of its container */
+        margin-top: 5px; /* Add some space if spells wrap */
+    }
+    .controls {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+
+    .info { /* Instructions text */
+        font-size: 0.65em;
+    }
+    .info ul {
+        display: flex;
+        flex-direction: column; /* Stack instructions */
+        align-items: center;
+        gap: 2px;
+    }
+    .info li {
+        margin: 0;
+    }
+
+
+    #ui-container {
+        bottom: auto; /* Override fixed bottom */
+        top: 10px; /* Move to top */
+        left: auto; 
+        right: 10px; /* Keep on right or move below turnOrder */
+        /* Or consider placing it near the bottom but above controls if space is an issue */
+        /* For example: bottom: calc(var(--bottom-controls-height, 100px) + 10px); */
+        padding: 3px;
+        gap: 5px;
+    }
+    #inventory-button {
+        width: 32px;
+        height: 32px;
+    }
+    #inventory-button svg {
+        width: 18px;
+        height: 18px;
+    }
+    #player-stats {
+        font-size: 0.7em;
+        padding: 5px 8px;
+        min-width: 140px; /* Further reduce min-width */
+        gap: 2px 6px;
+    }
+
+
+    /* Modals on Mobile */
+    .modal-content {
+        margin: 5% auto; /* Less top margin */
+        width: 90%; /* More width for content */
+        max-width: none; /* Remove max-width constraint for small screens */
+        padding: 20px;
+        font-size: 0.9em; /* Adjust font size in modals */
+    }
+    .modal h2, .modal h3 {
+        font-size: 1.1em;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+    }
+    .modal h3 {
+        font-size: 0.9em;
+    }
+    .close-button {
+        top: 10px;
+        right: 10px;
+        font-size: 32px; /* Larger close button */
+        width: 32px; /* Ensure tap area */
+        height: 32px;
+        line-height: 32px;
+        text-align: center;
+    }
+
+    .equipment-slots-container {
+        gap: 8px;
+        justify-content: center;
+    }
+    .slot {
+        width: 60px; /* Smaller slots */
+        height: 60px;
+        font-size: 0.7em;
+    }
+    .slot img {
+        max-width: 30px;
+        max-height: 30px;
+    }
+
+    .tab-buttons button {
+        padding: 12px 10px; /* Adjust padding */
+        font-size: 0.9em;
+    }
+
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Adjust item size */
+        gap: 8px;
+        max-height: 250px; /* Adjust height */
+    }
+    .inventory-item {
+        height: 90px; /* Adjust item height */
+    }
+    .inventory-item img {
+        max-width: 40px;
+        max-height: 40px;
+    }
+    .inventory-item-name {
+        font-size: 0.75em;
+    }
+
+    #crafting-list {
+        max-height: 280px;
+    }
+    .crafting-recipe {
+        flex-direction: column; /* Stack recipe parts */
+        gap: 10px;
+        padding: 8px;
+    }
+    .crafting-recipe-ingredients {
+        margin: 0;
+        justify-content: center;
+    }
+    .craft-button {
+        width: 100%; /* Full width craft button */
+        padding: 10px;
+    }
+
+    #end-match-screen button {
+        padding: 12px 15px; /* Larger buttons */
+        font-size: 1em;
+    }
+    .next-room-button-style {
+        /* ensure it's visible if it was set to display:none by default */
+    }
+
+    /* Original End Turn button hidden on mobile */
+    #end-turn-button {
+        display: none;
+    }
+    /* Hide keyboard instructions on mobile */
+    .info {
+        display: none;
+    }
+
+    .mobile-action-button {
+        display: inline-block; /* Show mobile buttons */
+        padding: 10px 15px;
+        font-size: 0.9em; /* Adjust as needed */
+        color: #ecf0f1;
+        background-color: #34495e; /* Button color */
+        border: 1px solid #566573;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 5px;
+        min-width: 100px; /* Ensure decent tap area */
+        text-align: center;
+    }
+    .mobile-action-button:hover {
+        background-color: #4a6572;
+    }
+    .mobile-action-button:active {
+        background-color: #2c3e50;
+    }
+
+    /* Adjust controls container for new buttons if they are side-by-side */
+    .controls {
+        display: flex; /* Allow buttons to sit side-by-side */
+        flex-wrap: wrap; /* Allow wrapping if space is tight */
+        justify-content: center;
+        gap: 10px; /* Space between mobile buttons */
+    }
+}
+
+/* Styles for mobile action buttons (default to hidden) */
+.mobile-action-button {
+    display: none;
+}

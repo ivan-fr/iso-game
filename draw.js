@@ -2,6 +2,348 @@
 import { isoToScreen } from './grid.js'; // Import isoToScreen
 import inventoryManager, { allItems } from './inventory.js'; // Import inventoryManager and allItems
 
+// --- Projectile Helper Functions ---
+
+/**
+ * Draws a particle trail behind a moving object
+ * @param {CanvasRenderingContext2D} ctx - The canvas context
+ * @param {number} x - Current x position
+ * @param {number} y - Current y position
+ * @param {number} dx - x velocity
+ * @param {number} dy - y velocity
+ * @param {Object} options - Configuration options
+ */
+function drawParticleTrail(ctx, x, y, dx, dy, {
+  count = 6,          // Number of particles
+  sizeBase = 3,       // Base size of particles
+  sizeDecay = 0.5,    // How quickly particles shrink
+  alphaBase = 0.4,    // Base alpha
+  alphaDecay = 0.1,   // How quickly particles fade
+  distance = 2,       // Distance between particles
+  color = '#ffffff',  // Particle color
+  jitter = 4,         // Random position jitter
+  speedFactor = 1     // Adjusts trail length
+} = {}) {
+  ctx.save();
+  ctx.translate(x, y);
+  
+  for (let i = 1; i <= count; i++) {
+    const alpha = alphaBase * (1 - i / (count + 1));
+    if (alpha <= 0) continue;
+    
+    ctx.globalAlpha = alpha;
+    const particleX = -dx * i * distance * speedFactor;
+    const particleY = -dy * i * distance * speedFactor;
+    const size = Math.max(0.5, sizeBase - i * sizeDecay);
+    
+    // Add some randomness to position
+    const jitterX = (Math.random() - 0.5) * jitter * (i / count);
+    const jitterY = (Math.random() - 0.5) * jitter * (i / count);
+    
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(particleX + jitterX, particleY + jitterY, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  ctx.restore();
+}
+
+/**
+ * Draws a glow effect around a point
+ * @param {CanvasRenderingContext2D} ctx - The canvas context
+ * @param {number} x - Center x position
+ * @param {number} y - Center y position
+ * @param {number} radius - Base radius of the glow
+ * @param {string} color - Base color of the glow
+ * @param {Object} options - Configuration options
+ */
+function drawGlowEffect(ctx, x, y, radius, color, {
+  pulse = 0,          // Pulsing amount (0-1)
+  alpha = 0.5,        // Maximum alpha
+  blur = 15,          // Blur amount
+  layers = 2,         // Number of glow layers
+  gradient = true     // Use gradient if true, solid color if false
+} = {}) {
+  ctx.save();
+  ctx.translate(x, y);
+  
+  const currentRadius = radius * (1 + pulse * 0.2);
+  
+  for (let i = layers; i > 0; i--) {
+    const layerRadius = currentRadius * (1 + (i / layers));
+    const layerAlpha = (alpha * (i / layers)) / 2; // Fade out outer layers
+    
+    ctx.beginPath();
+    ctx.arc(0, 0, layerRadius, 0, Math.PI * 2);
+    
+    if (gradient) {
+      const gradient = ctx.createRadialGradient(
+        0, 0, 0,
+        0, 0, layerRadius
+      );
+      gradient.addColorStop(0, `rgba(${hexToRgb(color).join(',')}, ${layerAlpha})`);
+      gradient.addColorStop(1, `rgba(${hexToRgb(color).join(',')}, 0)`);
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = color;
+      ctx.globalAlpha = layerAlpha;
+    }
+    
+    ctx.shadowColor = color;
+    ctx.shadowBlur = blur * (i / layers);
+    ctx.fill();
+  }
+  
+  ctx.restore();
+}
+
+/**
+ * Converts hex color to RGB array
+ * @param {string} hex - Hex color string (#RRGGBB or #RGB)
+ * @returns {number[]} [r, g, b] values (0-255)
+ */
+function hexToRgb(hex) {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse r, g, b values
+  let r, g, b;
+  if (hex.length === 3) {
+    r = parseInt(hex[0] + hex[0], 16);
+    g = parseInt(hex[1] + hex[1], 16);
+    b = parseInt(hex[2] + hex[2], 16);
+  } else {
+    r = parseInt(hex.substring(0, 2), 16);
+    g = parseInt(hex.substring(2, 4), 16);
+    b = parseInt(hex.substring(4, 6), 16);
+  }
+  
+  return [r, g, b];
+}
+
+/**
+ * Draws a star shape
+ * @param {CanvasRenderingContext2D} ctx - The canvas context
+ * @param {number} x - Center x position
+ * @param {number} y - Center y position
+ * @param {number} radius - Outer radius of the star
+ * @param {number} points - Number of points
+ * @param {Object} options - Configuration options
+ */
+function drawStar(ctx, x, y, radius, points, {
+  innerRadiusRatio = 0.5,  // Ratio of inner to outer radius
+  rotation = 0,            // Rotation in radians
+  fillStyle = '#ffffff',   // Fill color
+  strokeStyle = null,      // Stroke color (optional)
+  lineWidth = 1            // Stroke width
+} = {}) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  
+  const innerRadius = radius * innerRadiusRatio;
+  const angleStep = (Math.PI * 2) / points;
+  
+  ctx.beginPath();
+  
+  for (let i = 0; i < points * 2; i++) {
+    const angle = i * angleStep / 2 - Math.PI / 2; // Start from top
+    const r = i % 2 === 0 ? radius : innerRadius;
+    
+    if (i === 0) {
+      ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+    } else {
+      ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+  }
+  
+  ctx.closePath();
+  
+  if (fillStyle) {
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+  
+  if (strokeStyle) {
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+  }
+  
+  ctx.restore();
+}
+
+// --- End Projectile Helper Functions ---
+
+// --- Projectile Configurations ---
+const PROJECTILE_TYPES = {
+  // Player Spell 0 (Mono-target - Yellow Star)
+  player_spell_0: {
+    type: 'star',
+    baseRadius: 10,
+    color: '#f1c40f',
+    trail: {
+      count: 8,
+      sizeBase: 4,
+      sizeDecay: 0.5,
+      alphaBase: 0.4,
+      distance: 2,
+      color: 'rgba(255, 223, 100, 0.8)',
+      jitter: 8,
+      speedFactor: 1
+    },
+    glow: {
+      radius: 16,
+      color: '#f1c40f',
+      alpha: 0.5,
+      blur: 15,
+      pulse: 0.15
+    },
+    star: {
+      points: 5,
+      innerRadiusRatio: 0.5,
+      fill: '#ffffff',
+      stroke: '#f1c40f',
+      lineWidth: 2
+    }
+  },
+  
+  // Player Spell 1 (Zone - Orange Orb)
+  player_spell_1: {
+    type: 'orb',
+    baseRadius: 11,
+    color: '#ff8c00',
+    trail: {
+      count: 6,
+      sizeBase: 5,
+      sizeDecay: 0.8,
+      alphaBase: 0.4,
+      distance: 2.5,
+      color: 'rgba(255, 165, 80, 0.7)',
+      jitter: 5,
+      speedFactor: 1.2
+    },
+    glow: {
+      radius: 20,
+      color: '#ff8c00',
+      alpha: 0.6,
+      blur: 20,
+      pulse: 0.2
+    },
+    orb: {
+      coreColor: '#ff8c00',
+      edgeColor: '#ff6600',
+      crackles: 5,
+      crackleLength: 0.5
+    }
+  },
+  
+  // Player Spell 2 (Push - Green Arrow)
+  player_spell_2: {
+    type: 'arrow',
+    length: 35,
+    width: 14,
+    color: '#2ecc71',
+    trail: {
+      count: 7,
+      sizeBase: 5,
+      sizeDecay: 0.6,
+      alphaBase: 0.4,
+      distance: 2.5,
+      color: 'rgba(80, 255, 180, 0.6)',
+      jitter: 6,
+      speedFactor: 1.3
+    },
+    arrow: {
+      tipLength: 0.4,
+      indent: 0.2,
+      fillGradient: ['#2ecc71', '#aaffdd'],
+      stroke: '#ffffff',
+      lineWidth: 1.5
+    }
+  },
+  
+  // Boss Projectile (Red Fireball)
+  boss: {
+    type: 'fireball',
+    baseRadius: 12,
+    color: '#e74c3c',
+    trail: {
+      count: 10,
+      sizeBase: 5,
+      sizeDecay: 0.4,
+      alphaBase: 0.5,
+      distance: 1.5,
+      color: 'rgba(255, 120, 50, 0.8)',
+      jitter: 10,
+      speedFactor: 1.2
+    },
+    fireball: {
+      coreColor: '#ffffff',
+      midColor: '#ffdd00',
+      outerColor: '#ff6600',
+      edgeColor: '#e74c3c',
+      flicker: 0.2,
+      heatHaze: true
+    }
+  },
+  
+  // Sheep Projectile (Brown Mud Clod)
+  sheep: {
+    type: 'mud',
+    baseRadius: 9,
+    color: '#8B4513',
+    trail: {
+      count: 6,
+      sizeBase: 6,
+      sizeDecay: 0.7,
+      alphaBase: 0.4,
+      distance: 2,
+      color: 'rgba(160, 110, 75, 0.7)',
+      jitter: 5,
+      speedFactor: 1.0
+    },
+    mud: {
+      points: 7,
+      irregularity: 0.4,
+      fill: '#8B4513',
+      stroke: '#65340B',
+      lineWidth: 1,
+      splatFactor: 2.0
+    }
+  },
+  
+  // Sheepist Noir Projectile (Dark Orb)
+  sheepist_noir: {
+    type: 'dark_orb',
+    baseRadius: 10,
+    color: '#2c3e50',
+    trail: {
+      count: 8,
+      sizeBase: 7,
+      sizeDecay: 0.6,
+      alphaBase: 0.5,
+      distance: 1.8,
+      color: 'rgba(60, 70, 90, 0.8)',
+      jitter: 3,
+      speedFactor: 1.0,
+      swirl: true,
+      swirlIntensity: 0.8
+    },
+    darkOrb: {
+      coreColor: '#566573',
+      edgeColor: '#2c3e50',
+      auraColor: 'rgba(80, 90, 110, 0.3)',
+      auraRadius: 1.7,
+      swirls: 2,
+      swirlColor: 'rgba(119, 136, 153, 0.2)'
+    }
+  }
+};
+
+// --- End Projectile Configurations ---
+
 // --- Simple Noise Helper ---
 const noise_pattern = {};
 for (let i = -50; i < 50; i++) {
@@ -812,384 +1154,541 @@ export function drawEntity(ctx, entity, entityImage, imageLoaded, TILE_W, TILE_H
     ctx.restore(); // Restore original context state
 }
 
-// Fonction pour dessiner les projectiles
+/**
+ * Draws projectiles on the canvas
+ * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+ * @param {Array} projectiles - Array of projectile objects to draw
+ * @param {Array} SPELLS - Array of spell configurations
+ */
 export function drawProjectiles(ctx, projectiles, SPELLS) {
+    const now = performance.now();
+    
     projectiles.forEach(p => {
         ctx.save();
-        const now = performance.now(); // Get time for animations
-
+        
+        // Determine projectile type and configuration
+        let config;
+        let spellIndex = 0;
+        
         if (p.owner === 'player') {
-            let spellColor = '#f1c40f'; // Default Yellow for Spell 0
-            let spellIndex = p.spellIndex ?? 0; // Default to 0 if undefined
-            if (typeof spellIndex === 'number' && SPELLS && SPELLS[spellIndex]) {
-                spellColor = SPELLS[spellIndex].color;
+            spellIndex = p.spellIndex ?? 0;
+            const spellKey = `player_spell_${spellIndex}`;
+            config = { ...PROJECTILE_TYPES[spellKey] };
+            
+            // Override color from SPELLS if available
+            if (SPELLS?.[spellIndex]?.color) {
+                config.color = SPELLS[spellIndex].color;
+                if (config.glow) config.glow.color = SPELLS[spellIndex].color;
+                if (config.star) config.star.stroke = SPELLS[spellIndex].color;
             }
-
-            // --- Player Spell 0 (Mono-cible - Yellow) ---
-            if (spellIndex === 0) {
-                const baseRadius = 10;
-                const pulseFactor = 0.15 * Math.sin(now / 150); // Gentle pulse
-                const rotationSpeed = now / 180;
-                const starPoints = 5; // Pentagram shape
-
-                ctx.save();
-                ctx.translate(p.x, p.y);
-
-                // Trail (particle-like sparks)
-                ctx.globalAlpha = 0.5;
-                for (let t = 1; t <= 8; t++) {
-                    const trailAlpha = 0.4 * (1 - t / 9);
-                    if (trailAlpha <= 0) continue;
-                    ctx.globalAlpha = trailAlpha;
-                    const trailX = -p.dx * t * 2; // Spaced further back
-                    const trailY = -p.dy * t * 2;
-                    const sparkSize = Math.max(1, 4 - t * 0.5);
-                    ctx.fillStyle = `rgba(255, 223, 100, ${trailAlpha * 0.8})`; // Yellowish-white sparks
-                    ctx.beginPath();
-                    ctx.arc(trailX + (Math.random() - 0.5) * 8, trailY + (Math.random() - 0.5) * 8, sparkSize, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                ctx.restore(); // Restore from trail drawing translation
-
-                // Main Projectile (Star)
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(rotationSpeed);
-                ctx.globalAlpha = 0.95;
-
-                // Outer Glow
-                ctx.beginPath();
-                ctx.arc(0, 0, baseRadius * (1.6 + pulseFactor * 0.8), 0, Math.PI * 2);
-                const gradGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * (1.6 + pulseFactor * 0.8));
-                gradGlow.addColorStop(0, `rgba(255, 235, 150, 0.5)`); // Brighter center
-                gradGlow.addColorStop(1, `rgba(255, 200, 50, 0)`); // Fade out
-                ctx.fillStyle = gradGlow;
-                ctx.fill();
-
-                // Star Shape
-                ctx.beginPath();
-                for (let i = 0; i < starPoints * 2; i++) {
-                    const angle = Math.PI / starPoints * i - Math.PI / 2; // Start pointing up
-                    const radius = i % 2 === 0 ? baseRadius * (1.1 + pulseFactor) : baseRadius * 0.5 * (1.1 + pulseFactor);
-                    ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
-                }
-                ctx.closePath();
-
-                ctx.shadowColor = spellColor;
-                ctx.shadowBlur = 15;
-                ctx.fillStyle = '#fff'; // Bright white core
-                ctx.fill();
-                ctx.strokeStyle = spellColor; // Yellow outline
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.restore(); // Restore from main projectile drawing
-
-            // --- Player Spell 1 (Zone croix - Orange) ---
-            } else if (spellIndex === 1) {
-                const baseRadius = 11;
-                const pulse = 0.8 + 0.2 * Math.sin(now / 100); // Faster, stronger pulse
-                const rotation = now / 500; // Slow rotation
-
-                ctx.save();
-                ctx.translate(p.x, p.y);
-
-                // Trail (Wispy, expanding)
-                ctx.globalAlpha = 0.4;
-                 for (let t = 1; t <= 6; t++) {
-                    const trailAlpha = 0.3 * (1 - t / 7);
-                    if (trailAlpha <= 0) continue;
-                    ctx.globalAlpha = trailAlpha;
-                    const trailX = -p.dx * t * 2.5;
-                    const trailY = -p.dy * t * 2.5;
-                    const trailRadius = Math.max(1, (8 - t * 0.8) * pulse); // Expanding trail
-                    ctx.fillStyle = `rgba(255, 165, 80, ${trailAlpha * 0.7})`; // Orange-ish trail
-                    ctx.beginPath();
-                    ctx.arc(trailX, trailY, trailRadius, 0, Math.PI * 2);
-                    ctx.fill();
-                 }
-                 ctx.restore(); // Restore from trail drawing
-
-                 // Main Projectile (Orb + Crackling Energy)
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(rotation);
-                ctx.globalAlpha = 0.9;
-
-                // Outer Energy Field
-                ctx.beginPath();
-                ctx.arc(0, 0, baseRadius * 1.8 * pulse, 0, Math.PI * 2);
-                const gradGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * 1.8 * pulse);
-                gradGlow.addColorStop(0, `rgba(255, 180, 100, 0.4)`);
-                gradGlow.addColorStop(1, `rgba(230, 126, 34, 0)`);
-                ctx.fillStyle = gradGlow;
-                ctx.fill();
-
-                 // Central Orb
-                ctx.beginPath();
-                ctx.arc(0, 0, baseRadius * pulse, 0, Math.PI * 2);
-                ctx.fillStyle = spellColor; // Solid orange core
-                ctx.shadowColor = spellColor;
-                ctx.shadowBlur = 20;
-                ctx.fill();
-
-                // Crackling Energy Lines (randomized)
-                ctx.globalAlpha = 0.6 * pulse;
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1.5;
-                const numLines = 5;
-                for (let i = 0; i < numLines; i++) {
-                    ctx.save();
-                    ctx.rotate(Math.random() * Math.PI * 2); // Random angle
-                    ctx.beginPath();
-                    ctx.moveTo(baseRadius * 0.8 * pulse, 0); // Start near core edge
-                    // Jagged line outwards
-                    const endRadius = baseRadius * (1.5 + Math.random() * 0.5) * pulse;
-                    ctx.lineTo(endRadius * 0.4, (Math.random() - 0.5) * 8);
-                    ctx.lineTo(endRadius, 0);
-                    ctx.stroke();
-                    ctx.restore();
-                }
-
-                ctx.restore(); // Restore from main projectile drawing
-
-            // --- Player Spell 2 (Poussée - Green) ---
-            } else if (spellIndex === 2) {
-                const arrowLength = 35;
-                const arrowWidth = 14;
-                const angle = Math.atan2(p.dy, p.dx);
-                const speedFactor = Math.min(1, (now % 200) / 100); // Faster effect cycle for speed lines
-
-                // Trail (Turbulent Wake)
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(angle);
-                ctx.globalAlpha = 0.4;
-                for (let t = 1; t <= 7; t++) {
-                    const trailAlpha = 0.35 * (1 - t / 8);
-                    if (trailAlpha <= 0) continue;
-                    ctx.globalAlpha = trailAlpha;
-                    const trailX = -arrowLength * 0.8 - t * 4; // Start behind arrow
-                    const trailY = (Math.random() - 0.5) * (arrowWidth * 0.8 + t); // Widening wake
-                    const trailSize = Math.max(1, 5 - t * 0.6);
-                    ctx.fillStyle = `rgba(80, 255, 180, ${trailAlpha * 0.6})`; // Lighter green wake
-                    ctx.beginPath();
-                    ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                ctx.restore(); // Restore from trail drawing
-
-                // Main Arrow
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(angle);
-                ctx.globalAlpha = 0.95;
-
-                // Leading "Shockwave" / Distortion (subtle)
-                ctx.globalAlpha = 0.2 + 0.3 * speedFactor;
-                ctx.fillStyle = `rgba(180, 255, 220, ${0.2 * speedFactor})`;
-                ctx.beginPath();
-                ctx.arc(arrowLength * 0.3, 0, arrowWidth * 1.2, -Math.PI/2.5, Math.PI/2.5); // Arc in front
-                ctx.fill();
-
-                // Arrow Shape (more dynamic)
-                ctx.beginPath();
-                ctx.moveTo(arrowLength * 0.4, 0); // Point slightly behind actual tip for effect
-                ctx.lineTo(0, arrowWidth / 2); // Back corner
-                ctx.lineTo(-arrowLength * 0.2, arrowWidth * 0.3); // Indent
-                ctx.lineTo(-arrowLength * 0.1, 0); // Center back
-                ctx.lineTo(-arrowLength * 0.2, -arrowWidth * 0.3); // Indent other side
-                ctx.lineTo(0, -arrowWidth / 2); // Other back corner
-                ctx.closePath();
-
-                const gradArrow = ctx.createLinearGradient(-arrowLength * 0.2, 0, arrowLength * 0.4, 0);
-                gradArrow.addColorStop(0, spellColor); // Darker green base
-                gradArrow.addColorStop(1, '#aaffdd'); // Lighter green tip
-                ctx.fillStyle = gradArrow;
-                ctx.shadowColor = '#50ffaa';
-                ctx.shadowBlur = 18;
-                ctx.fill();
-                ctx.strokeStyle = '#fff'; // White outline for contrast
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-
-                ctx.restore(); // Restore from main projectile
-
-            }
-        // --- Boss Projectile (Red Fireball) ---
-        } else if (p.owner === 'boss') {
-            const baseRadius = 12;
-            const flicker = 0.9 + 0.2 * Math.random(); // Random flicker
-            const pulse = 0.95 + 0.1 * Math.sin(now / 80); // Slight pulse
-
-            // Trail (Embers)
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.globalAlpha = 0.7;
-            for (let t = 1; t <= 10; t++) {
-                const trailAlpha = 0.5 * (1 - t / 11);
-                if (trailAlpha <= 0) continue;
-                ctx.globalAlpha = trailAlpha * flicker;
-                const trailX = -p.dx * t * 1.5; // Closer trail
-                const trailY = -p.dy * t * 1.5;
-                const emberSize = Math.max(1, 5 - t * 0.4);
-                ctx.fillStyle = `rgba(255, ${Math.floor(100 + Math.random() * 50)}, 0, ${trailAlpha})`; // Orange/Red Embers
-                ctx.beginPath();
-                ctx.arc(trailX + (Math.random() - 0.5) * 10, trailY + (Math.random() - 0.5) * 10, emberSize, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-
-            // Main Fireball
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.globalAlpha = 0.9 * flicker; // Apply flicker to main ball too
-
-            // Heat Haze (subtle outer ring)
-             ctx.globalAlpha = 0.15 * flicker;
-             ctx.beginPath();
-             ctx.arc(0, 0, baseRadius * 2.2 * pulse, 0, Math.PI * 2);
-             ctx.fillStyle = `rgba(255, 100, 50, 0.2)`; // Faint orange haze
-             ctx.fill();
-
-            // Fireball Core
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius * pulse * flicker, 0, Math.PI * 2);
-            const gradFire = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * pulse * flicker);
-            gradFire.addColorStop(0, '#ffffff'); // White hot center
-            gradFire.addColorStop(0.3, '#ffdd00'); // Yellow
-            gradFire.addColorStop(0.8, '#ff6600'); // Orange
-            gradFire.addColorStop(1, p.color || '#e74c3c'); // Outer red (use projectile color if available)
-            ctx.fillStyle = gradFire;
-            ctx.shadowColor = p.color || '#e74c3c';
-            ctx.shadowBlur = 25;
-            ctx.fill();
-
-            ctx.restore();
-
-        // --- sheep Projectile (Brown - Mud Clod) ---
-        } else if (p.owner === 'sheep') {
-            const baseRadius = 9;
-            const rotation = now / 200; // Slow rotation
-            const splatFactor = Math.sin(now / 100) * 2; // For irregular shape
-
-            // Trail (Dusty/Muddy)
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.globalAlpha = 0.5;
-            for (let t = 1; t <= 6; t++) {
-                const trailAlpha = 0.4 * (1 - t / 7);
-                if (trailAlpha <= 0) continue;
-                ctx.globalAlpha = trailAlpha;
-                const trailX = -p.dx * t * 2;
-                const trailY = -p.dy * t * 2;
-                const dustSize = Math.max(1, 6 - t * 0.7);
-                ctx.fillStyle = `rgba(160, 110, 75, ${trailAlpha * 0.7})`; // Dusty brown
-                ctx.beginPath();
-                ctx.arc(trailX + (Math.random() - 0.5) * 5, trailY + (Math.random() - 0.5) * 5, dustSize, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-
-            // Main Mud Clod (Irregular shape)
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(rotation);
-            ctx.globalAlpha = 0.95;
-
-            ctx.beginPath();
-            const points = 7; // More irregular
-            for(let i=0; i<points; ++i) {
-                const angle = Math.PI * 2 / points * i;
-                const radius = baseRadius * (0.8 + Math.random() * 0.4); // Random radius per point
-                const xPoint = Math.cos(angle) * radius + (i % 2 === 0 ? splatFactor : -splatFactor); // Offset points for irregularity
-                const yPoint = Math.sin(angle) * radius + (i % 2 !== 0 ? splatFactor : -splatFactor);
-                if(i === 0) ctx.moveTo(xPoint, yPoint);
-                else ctx.lineTo(xPoint, yPoint);
-            }
-            ctx.closePath();
-
-            const mudColor = '#8B4513'; // SaddleBrown
-            const darkerMud = '#65340B';
-            ctx.fillStyle = mudColor;
-            ctx.shadowColor = darkerMud;
-            ctx.shadowBlur = 5;
-            ctx.fill();
-            ctx.strokeStyle = darkerMud; // Dark outline
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            ctx.restore();
-
-        // --- sheepist Noir Projectile (Dark Orb) ---
-        } else if (p.owner === 'sheepist_noir') {
-            const baseRadius = 10;
-            const pulse = 0.9 + 0.1 * Math.sin(now / 250); // Slow, heavy pulse
-            const swirlAngle = now / 800; // Slow swirl
-
-            // Trail (Thick, Dark, Swirling)
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.globalAlpha = 0.6;
-             for (let t = 1; t <= 8; t++) {
-                const trailAlpha = 0.5 * (1 - t / 9);
-                if (trailAlpha <= 0) continue;
-                ctx.globalAlpha = trailAlpha * pulse;
-                const trailX = -p.dx * t * 1.8;
-                const trailY = -p.dy * t * 1.8;
-                const trailRadius = Math.max(2, 7 - t * 0.6);
-                // Swirl effect
-                const swirlOffsetX = Math.cos(swirlAngle + t * 0.5) * t * 0.8;
-                const swirlOffsetY = Math.sin(swirlAngle + t * 0.5) * t * 0.8;
-
-                ctx.fillStyle = `rgba(60, 70, 90, ${trailAlpha * 0.8})`; // Dark blue-gray trail
-                ctx.beginPath();
-                ctx.arc(trailX + swirlOffsetX, trailY + swirlOffsetY, trailRadius, 0, Math.PI * 2);
-                ctx.fill();
-             }
-             ctx.restore(); // Restore from trail drawing
-
-            // Main Dark Orb
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.globalAlpha = 0.95;
-
-            // Dark Outer Aura
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius * 1.7 * pulse, 0, Math.PI * 2);
-            const gradAura = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * 1.7 * pulse);
-            gradAura.addColorStop(0, `rgba(80, 90, 110, 0.3)`);
-            gradAura.addColorStop(1, `rgba(44, 62, 80, 0)`);
-            ctx.fillStyle = gradAura;
-            ctx.fill();
-
-            // Core Orb
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius * pulse, 0, Math.PI * 2);
-            const gradCore = ctx.createRadialGradient(0, 0, baseRadius * 0.2 * pulse, 0, 0, baseRadius * pulse);
-            gradCore.addColorStop(0, '#566573'); // Lighter gray-blue center
-            gradCore.addColorStop(1, '#2c3e50'); // Dark grayish blue edge
-            ctx.fillStyle = gradCore;
-            ctx.shadowColor = '#1a2530'; // Very dark shadow
-            ctx.shadowBlur = 18;
-            ctx.fill();
-            // Subtle inner swirl lines
-            ctx.globalAlpha = 0.2 * pulse;
-            ctx.strokeStyle = '#778899'; // LightSlateGray
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, -baseRadius * 0.6);
-            ctx.bezierCurveTo(baseRadius * 0.5, -baseRadius * 0.3, baseRadius * 0.3, baseRadius * 0.5, 0, baseRadius * 0.7);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(0, baseRadius * 0.6);
-            ctx.bezierCurveTo(-baseRadius * 0.5, baseRadius * 0.3, -baseRadius * 0.3, -baseRadius * 0.5, 0, -baseRadius * 0.7);
-            ctx.stroke();
-
-            ctx.restore(); // Restore from main orb
+        } else {
+            // Boss or enemy projectile
+            config = { ...PROJECTILE_TYPES[p.owner] };
+            if (p.color) config.color = p.color;
         }
-        ctx.restore(); // Restore the state saved at the beginning of this projectile's drawing logic
+        
+        if (!config) {
+            console.warn(`No configuration found for projectile type: ${p.owner}${spellIndex !== undefined ? ` (spell ${spellIndex})` : ''}`);
+            ctx.restore();
+            return;
+        }
+        
+        // Add position and velocity to config for the helper functions
+        config.x = p.x;
+        config.y = p.y;
+        config.dx = p.dx;
+        config.dy = p.dy;
+        
+        // Draw trail if configured
+        if (config.trail) {
+            if (config.trail.swirl) {
+                // Handle swirling trail (e.g., for sheepist_noir)
+                const swirlAngle = now / 800;
+                for (let t = 1; t <= config.trail.count; t++) {
+                    const alpha = config.trail.alphaBase * (1 - t / (config.trail.count + 1));
+                    if (alpha <= 0) continue;
+                    
+                    const swirlOffsetX = Math.cos(swirlAngle + t * 0.5) * t * 0.8;
+                    const swirlOffsetY = Math.sin(swirlAngle + t * 0.5) * t * 0.8;
+                    
+                    drawParticleTrail(ctx, p.x + swirlOffsetX, p.y + swirlOffsetY, p.dx, p.dy, {
+                        ...config.trail,
+                        count: 1, // Draw one particle at a time in the loop
+                        alphaBase: alpha,
+                        jitter: 0 // No jitter for swirling trail
+                    });
+                }
+            } else {
+                // Standard particle trail
+                drawParticleTrail(ctx, p.x, p.y, p.dx, p.dy, config.trail);
+            }
+        }
+        
+        // Draw the main projectile
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        
+        // Apply rotation if the projectile has direction
+        if (p.dx !== 0 || p.dy !== 0) {
+            const angle = Math.atan2(p.dy, p.dx);
+            ctx.rotate(angle);
+        }
+        
+        // Draw based on projectile type
+        switch (config.type) {
+            case 'star':
+                drawStarProjectile(ctx, config, now);
+                break;
+                
+            case 'orb':
+                drawOrbProjectile(ctx, config, now);
+                break;
+                
+            case 'arrow':
+                drawArrowProjectile(ctx, config, now);
+                break;
+                
+            case 'fireball':
+                drawFireballProjectile(ctx, config, now);
+                break;
+                
+            case 'mud':
+                drawMudProjectile(ctx, config, now);
+                break;
+                
+            case 'dark_orb':
+                drawDarkOrbProjectile(ctx, config, now);
+                break;
+                
+            default:
+                console.warn(`Unknown projectile type: ${config.type}`);
+        }
+        
+        ctx.restore(); // Restore from main projectile transform
+        ctx.restore(); // Restore from initial save
     });
+}
+
+/**
+ * Draws a star-shaped projectile (e.g., player spell 0)
+ */
+function drawStarProjectile(ctx, config, now) {
+    const pulse = Math.sin(now / 150) * config.glow.pulse;
+    const rotation = now / 180;
+    
+    // Draw glow effect
+    if (config.glow) {
+        drawGlowEffect(ctx, 0, 0, config.glow.radius, config.glow.color, {
+            pulse: pulse,
+            alpha: config.glow.alpha,
+            blur: config.glow.blur
+        });
+    }
+    
+    // Draw star
+    if (config.star) {
+        ctx.save();
+        ctx.rotate(rotation);
+        drawStar(ctx, 0, 0, config.baseRadius * (1.1 + pulse), config.star.points, {
+            innerRadiusRatio: config.star.innerRadiusRatio,
+            fillStyle: config.star.fill,
+            strokeStyle: config.star.stroke,
+            lineWidth: config.star.lineWidth
+        });
+        ctx.restore();
+    }
+}
+
+/**
+ * Draws an orb projectile with crackling energy (e.g., player spell 1)
+ */
+function drawOrbProjectile(ctx, config, now) {
+    const pulse = 0.8 + 0.2 * Math.sin(now / 100);
+    const rotation = now / 500;
+    
+    // Draw glow effect
+    if (config.glow) {
+        drawGlowEffect(ctx, 0, 0, config.glow.radius * pulse, config.glow.color, {
+            alpha: config.glow.alpha,
+            blur: config.glow.blur,
+            pulse: pulse - 0.8 // Normalize pulse to 0-0.4 range
+        });
+    }
+    
+    // Save state for rotation
+    ctx.save();
+    ctx.rotate(rotation);
+    
+    // Draw central orb
+    if (config.orb) {
+        // Outer energy field
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, config.baseRadius * 1.8 * pulse);
+        gradient.addColorStop(0, `rgba(255, 180, 100, 0.4)`);
+        gradient.addColorStop(1, `rgba(230, 126, 34, 0)`);
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, config.baseRadius * 1.8 * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Central orb
+        const orbGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, config.baseRadius * pulse);
+        orbGradient.addColorStop(0, config.orb.coreColor);
+        orbGradient.addColorStop(1, config.orb.edgeColor);
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, config.baseRadius * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = orbGradient;
+        ctx.shadowColor = config.color;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        
+        // Crackling energy lines
+        ctx.globalAlpha = 0.6 * pulse;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        
+        for (let i = 0; i < config.orb.crackles; i++) {
+            ctx.save();
+            ctx.rotate(Math.random() * Math.PI * 2);
+            
+            ctx.beginPath();
+            ctx.moveTo(config.baseRadius * 0.8 * pulse, 0);
+            
+            // Create jagged line
+            const endRadius = config.baseRadius * (1.5 + Math.random() * 0.5) * pulse;
+            ctx.lineTo(endRadius * 0.4, (Math.random() - 0.5) * 8);
+            ctx.lineTo(endRadius, 0);
+            
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        // Reset global alpha
+        ctx.globalAlpha = 1.0;
+    }
+    
+    ctx.restore(); // Restore from rotation
+}
+
+/**
+ * Draws an arrow projectile (e.g., player spell 2 - push)
+ */
+function drawArrowProjectile(ctx, config, now) {
+    const pulse = 0.9 + 0.1 * Math.sin(now / 150);
+    const angle = Math.atan2(config.dy, config.dx);
+    
+    // Draw glow effect
+    if (config.glow) {
+        drawGlowEffect(ctx, 0, 0, config.glow.radius * pulse, config.glow.color, {
+            alpha: config.glow.alpha,
+            blur: config.glow.blur,
+            pulse: pulse - 0.9 // Normalize pulse to 0-0.2 range
+        });
+    }
+    
+    // Save state for rotation
+    ctx.save();
+    ctx.rotate(angle);
+    
+    // Draw arrow components
+    const width = config.baseWidth * pulse;
+    const height = config.baseHeight * pulse;
+    
+    // Arrow shaft
+    ctx.fillStyle = config.color;
+    ctx.shadowColor = config.color;
+    ctx.shadowBlur = 10;
+    
+    // Draw the main shaft
+    ctx.fillRect(-width * 0.8, -height * 0.5, width * 1.6, height);
+    
+    // Arrow head
+    ctx.beginPath();
+    ctx.moveTo(width * 0.8, 0);
+    ctx.lineTo(width * 1.6, -height * 1.5);
+    ctx.lineTo(width * 1.6, height * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Arrow fletching
+    ctx.beginPath();
+    ctx.moveTo(-width * 0.8, -height * 0.8);
+    ctx.lineTo(-width * 1.2, 0);
+    ctx.lineTo(-width * 0.8, height * 0.8);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Motion lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+        const yOffset = (i - 1) * height * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(-width * 0.7, yOffset);
+        ctx.lineTo(-width * 1.1, yOffset);
+        ctx.stroke();
+    }
+    
+    ctx.restore(); // Restore from rotation
+}
+
+/**
+ * Draws a fireball projectile (e.g., boss fireball)
+ */
+function drawFireballProjectile(ctx, config, now) {
+    const flicker = 0.9 + 0.2 * Math.random(); // Random flicker
+    const pulse = 0.95 + 0.1 * Math.sin(now / 80); // Slight pulse
+    
+    // Draw glow effect
+    if (config.glow) {
+        drawGlowEffect(ctx, 0, 0, config.glow.radius * pulse * flicker, config.glow.color, {
+            alpha: config.glow.alpha * flicker,
+            blur: config.glow.blur,
+            pulse: 0.1 + 0.1 * Math.sin(now / 100) // Subtle pulse
+        });
+    }
+    
+    // Draw fireball core
+    if (config.fireball) {
+        // Outer flame aura
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, config.baseRadius * 1.5 * pulse);
+        gradient.addColorStop(0, `rgba(255, 200, 0, ${0.7 * flicker})`);
+        gradient.addColorStop(0.7, `rgba(255, 100, 0, ${0.4 * flicker})`);
+        gradient.addColorStop(1, `rgba(200, 30, 0, 0)`);
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, config.baseRadius * 1.5 * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Inner fireball
+        const innerGradient = ctx.createRadialGradient(
+            0, 0, 0,
+            0, 0, config.baseRadius * pulse
+        );
+        innerGradient.addColorStop(0, '#ffff00');
+        innerGradient.addColorStop(0.7, '#ff6600');
+        innerGradient.addColorStop(1, '#ff0000');
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, config.baseRadius * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = innerGradient;
+        ctx.fill();
+        
+        // Add some fire-like texture with semi-transparent yellow/red circles
+        ctx.save();
+        ctx.globalAlpha = 0.6 * flicker;
+        for (let i = 0; i < 5; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * config.baseRadius * 0.6;
+            const size = 1 + Math.random() * 3;
+            
+            ctx.beginPath();
+            ctx.arc(
+                Math.cos(angle) * dist,
+                Math.sin(angle) * dist,
+                size,
+                0,
+                Math.PI * 2
+            );
+            ctx.fillStyle = Math.random() > 0.5 ? '#ff9900' : '#ff3300';
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+/**
+ * Draws a mud projectile (e.g., sheep projectile)
+ */
+function drawMudProjectile(ctx, config, now) {
+    const rotation = now / 200; // Slow rotation
+    const splatFactor = Math.sin(now / 100) * 2; // For irregular shape
+    
+    // Draw trail effect
+    if (config.trail) {
+        drawParticleTrail(ctx, 0, 0, config.dx, config.dy, {
+            count: 6,
+            sizeBase: 6,
+            sizeDecay: 0.7,
+            alphaBase: 0.4,
+            alphaDecay: 0.1,
+            distance: 2,
+            color: '#A06E4B', // Dusty brown
+            jitter: 5,
+            speedFactor: 2
+        });
+    }
+    
+    // Save state for rotation and translation
+    ctx.save();
+    ctx.translate(0, 0); // Position will be handled by the caller
+    ctx.rotate(rotation);
+    
+    // Draw mud clod (irregular shape)
+    if (config.mud) {
+        ctx.beginPath();
+        const points = 7; // More irregular
+        for (let i = 0; i < points; ++i) {
+            const angle = (Math.PI * 2 / points) * i;
+            const radius = config.baseRadius * (0.8 + Math.random() * 0.4); // Random radius per point
+            const xPoint = Math.cos(angle) * radius + (i % 2 === 0 ? splatFactor : -splatFactor); // Offset points for irregularity
+            const yPoint = Math.sin(angle) * radius + (i % 2 !== 0 ? splatFactor : -splatFactor);
+            if (i === 0) {
+                ctx.moveTo(xPoint, yPoint);
+            } else {
+                ctx.lineTo(xPoint, yPoint);
+            }
+        }
+        ctx.closePath();
+        
+        // Fill mud clod
+        ctx.fillStyle = config.mud.color || '#8B4513'; // SaddleBrown
+        ctx.shadowColor = config.mud.darkerColor || '#65340B';
+        ctx.shadowBlur = 5;
+        ctx.fill();
+        
+        // Add outline
+        ctx.strokeStyle = config.mud.darkerColor || '#65340B';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Add some texture
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < 5; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * config.baseRadius * 0.8;
+            const size = 1 + Math.random() * 2;
+            
+            ctx.beginPath();
+            ctx.arc(
+                Math.cos(angle) * dist,
+                Math.sin(angle) * dist,
+                size,
+                0,
+                Math.PI * 2
+            );
+            ctx.fillStyle = Math.random() > 0.5 ? '#A0522D' : '#8B4513';
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+    
+    ctx.restore(); // Restore from rotation and translation
+}
+
+/**
+ * Draws a dark orb projectile (e.g., sheepist_noir projectile)
+ */
+function drawDarkOrbProjectile(ctx, config, now) {
+    const pulse = 0.9 + 0.1 * Math.sin(now / 250); // Slow, heavy pulse
+    const swirlAngle = now / 800; // Slow swirl
+    
+    // Draw trail with swirl effect
+    if (config.trail) {
+        ctx.save();
+        ctx.translate(0, 0); // Position handled by caller
+        ctx.globalAlpha = 0.6;
+        
+        for (let t = 1; t <= config.trail.count; t++) {
+            const trailAlpha = config.trail.alphaBase * (1 - t / (config.trail.count + 1));
+            if (trailAlpha <= 0) continue;
+            
+            ctx.globalAlpha = trailAlpha * pulse;
+            const trailX = -config.dx * t * 1.8;
+            const trailY = -config.dy * t * 1.8;
+            const trailRadius = Math.max(2, config.trail.sizeBase - t * 0.6);
+            
+            // Add swirl effect if enabled
+            let swirlOffsetX = 0;
+            let swirlOffsetY = 0;
+            if (config.trail.swirl) {
+                const swirlIntensity = config.trail.swirlIntensity || 0.8;
+                swirlOffsetX = Math.cos(swirlAngle + t * 0.5) * t * swirlIntensity;
+                swirlOffsetY = Math.sin(swirlAngle + t * 0.5) * t * swirlIntensity;
+            }
+            
+            ctx.fillStyle = config.trail.color || `rgba(60, 70, 90, ${trailAlpha * 0.8})`;
+            ctx.beginPath();
+            ctx.arc(
+                trailX + swirlOffsetX, 
+                trailY + swirlOffsetY, 
+                trailRadius, 
+                0, 
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
+        
+        ctx.restore();
+    }
+    
+    // Save state for main orb drawing
+    ctx.save();
+    
+    // Draw dark orb
+    if (config.darkOrb) {
+        // Outer aura
+        const auraRadius = config.baseRadius * (config.darkOrb.auraRadius || 1.7) * pulse;
+        const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, auraRadius);
+        auraGradient.addColorStop(0, `rgba(80, 90, 110, 0.3)`);
+        auraGradient.addColorStop(1, 'rgba(44, 62, 80, 0)');
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
+        ctx.fillStyle = auraGradient;
+        ctx.fill();
+        
+        // Core orb
+        const coreGradient = ctx.createRadialGradient(
+            0, 0, config.baseRadius * 0.2 * pulse,
+            0, 0, config.baseRadius * pulse
+        );
+        coreGradient.addColorStop(0, config.darkOrb.coreColor || '#566573');
+        coreGradient.addColorStop(1, config.darkOrb.edgeColor || '#2c3e50');
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, config.baseRadius * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = coreGradient;
+        ctx.shadowColor = '#1a2530';
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        
+        // Inner swirls
+        ctx.save();
+        ctx.globalAlpha = 0.2 * pulse;
+        ctx.strokeStyle = config.darkOrb.swirlColor || 'rgba(119, 136, 153, 0.2)';
+        ctx.lineWidth = 1;
+        
+        const swirls = config.darkOrb.swirls || 2;
+        for (let i = 0; i < swirls; i++) {
+            const angleOffset = (i / swirls) * Math.PI * 2;
+            const points = [];
+            
+            // Create swirl points
+            for (let a = 0; a < Math.PI * 2; a += 0.1) {
+                const r = config.baseRadius * (0.3 + Math.sin(a * 3) * 0.1);
+                points.push({
+                    x: Math.cos(a + angleOffset) * r,
+                    y: Math.sin(a + angleOffset) * r * 0.5
+                });
+            }
+            
+            // Draw swirl
+            ctx.beginPath();
+            points.forEach((p, idx) => {
+                if (idx === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            });
+            ctx.stroke();
+        }
+        
+        ctx.restore();
+    }
+    
+    ctx.restore(); // Restore from main orb drawing
 }
 
 // Fonction pour dessiner les animations de dégâts

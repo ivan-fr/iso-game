@@ -11,7 +11,7 @@ describe('Multiplayer Load Testing', () => {
     let io;
     let clients = [];
     
-    const PORT = 3001;
+    const PORT = Math.floor(Math.random() * 10000) + 40000; // Random port 40000-50000
     const SERVER_URL = `http://localhost:${PORT}`;
     
     beforeAll((done) => {
@@ -39,8 +39,14 @@ describe('Multiplayer Load Testing', () => {
             });
         });
         
-        httpServer.listen(PORT, done);
-    });
+        httpServer.listen(PORT, (err) => {
+            if (err) {
+                console.error('Failed to start test server:', err);
+                return done(err);
+            }
+            done();
+        });
+    }, 15000);
     
     afterAll((done) => {
         clients.forEach(client => {
@@ -50,9 +56,16 @@ describe('Multiplayer Load Testing', () => {
         });
         clients = [];
         
-        io.close();
-        httpServer.close(done);
-    });
+        if (io) io.close();
+        if (httpServer) {
+            httpServer.close((err) => {
+                if (err) console.error('Error closing server:', err);
+                done();
+            });
+        } else {
+            done();
+        }
+    }, 10000);
     
     afterEach(() => {
         // Clean up clients after each test

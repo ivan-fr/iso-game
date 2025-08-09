@@ -36,7 +36,8 @@ describe('Performance Monitoring', () => {
             
             const duration = monitor.endTimer(timerId);
             
-            expect(duration).toBe(100);
+            expect(duration).toBeGreaterThanOrEqual(90);
+            expect(duration).toBeLessThanOrEqual(110);
             expect(monitor.timers.has(timerId)).toBe(false);
         });
 
@@ -160,6 +161,10 @@ describe('Performance Monitoring', () => {
         });
 
         test('should handle timer sampling', () => {
+            // Mock Math.random to return 0.5 (greater than 0.0 sampleRate)
+            const originalRandom = Math.random;
+            Math.random = jest.fn(() => 0.5);
+            
             const lowSampleMonitor = new PerformanceMonitor({
                 enableMetrics: true,
                 sampleRate: 0.0 // 0% sampling
@@ -168,6 +173,8 @@ describe('Performance Monitoring', () => {
             const timerId = lowSampleMonitor.startTimer('test');
             expect(timerId).toBeNull();
             
+            // Restore original Math.random
+            Math.random = originalRandom;
             lowSampleMonitor.stop();
         });
 

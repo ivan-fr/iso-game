@@ -39,6 +39,13 @@ export class EntityError extends GameError {
     }
 }
 
+export class NetworkError extends GameError {
+    constructor(message, context = {}) {
+        super(message, 'NETWORK_ERROR', context);
+        this.name = 'NetworkError';
+    }
+}
+
 /**
  * Error logging utility
  */

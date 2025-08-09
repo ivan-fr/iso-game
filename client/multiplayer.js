@@ -3,8 +3,8 @@
  * Handles Socket.IO connection and multiplayer features
  */
 import { io } from 'socket.io-client';
-import { gameState } from './state/gameState.js';
-import { ErrorLogger, NetworkError } from './utils/errors.js';
+import { gameState } from '../state/gameState.js';
+import { ErrorLogger, NetworkError } from '../utils/errors.js';
 
 class MultiplayerClient {
     constructor() {
@@ -16,9 +16,11 @@ class MultiplayerClient {
         this.isInGame = false;
         this.otherPlayers = new Map(); // playerId -> playerData
         
-        // Load saved player ID from localStorage
-        this.playerId = localStorage.getItem('multiplayer_player_id') || null;
-        this.playerName = localStorage.getItem('multiplayer_player_name') || 'Anonymous';
+        // Load saved player ID from localStorage if available
+        if (typeof localStorage !== 'undefined') {
+            this.playerId = localStorage.getItem('multiplayer_player_id') || null;
+            this.playerName = localStorage.getItem('multiplayer_player_name') || 'Anonymous';
+        }
     }
 
     /**

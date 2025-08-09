@@ -130,15 +130,27 @@ const dropTable = {
 
 class InventoryManager {
     constructor() {
-        this.resources = JSON.parse(localStorage.getItem('inventory_resources')) || {};
-        this.items = JSON.parse(localStorage.getItem('inventory_items')) || {};
-        this.equipment = JSON.parse(localStorage.getItem('inventory_equipment')) || { head: null /* Add other slots if needed */ };
+        // Initialize with empty data, but don't access localStorage here.
+        this.resources = {};
+        this.items = {};
+        this.equipment = { head: null };
+    }
+
+    // Load data from localStorage. Should be called on client-side initialization.
+    load() {
+        if (typeof localStorage !== 'undefined') {
+            this.resources = JSON.parse(localStorage.getItem('inventory_resources')) || {};
+            this.items = JSON.parse(localStorage.getItem('inventory_items')) || {};
+            this.equipment = JSON.parse(localStorage.getItem('inventory_equipment')) || { head: null };
+        }
     }
 
     save() {
-        localStorage.setItem('inventory_resources', JSON.stringify(this.resources));
-        localStorage.setItem('inventory_items', JSON.stringify(this.items));
-        localStorage.setItem('inventory_equipment', JSON.stringify(this.equipment));
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('inventory_resources', JSON.stringify(this.resources));
+            localStorage.setItem('inventory_items', JSON.stringify(this.items));
+            localStorage.setItem('inventory_equipment', JSON.stringify(this.equipment));
+        }
     }
 
     // --- Resource Management ---

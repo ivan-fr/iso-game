@@ -5,7 +5,7 @@
 import { allResources, allItems, allRecipes } from './inventory.js';
 import multiplayerClient from './client/multiplayer.js';
 
-class MultiplayerInventoryManager {
+export class MultiplayerInventoryManager {
     constructor() {
         // Server-synced data
         this.resources = {};

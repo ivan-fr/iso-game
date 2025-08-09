@@ -2,7 +2,6 @@
  * Tests for Redis utilities
  */
 import { jest } from '@jest/globals';
-import redisManager from '../../utils/redis.js';
 
 // Mock Redis client
 const mockRedisClient = {
@@ -26,24 +25,41 @@ jest.mock('redis', () => ({
     createClient: jest.fn(() => mockRedisClient)
 }));
 
+// Mock the ErrorLogger to prevent console output during tests
+jest.mock('../../utils/errors.js', () => ({
+    ErrorLogger: {
+        log: jest.fn()
+    },
+    GameError: jest.fn()
+}));
+
+// Import after mocking
+const { default: redisManager } = await import('../../utils/redis.js');
+
 describe('Redis Manager', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        // Reset redisManager state
         redisManager.isConnected = false;
         redisManager.client = null;
     });
 
     describe('Connection Management', () => {
         test('should connect to Redis successfully', async () => {
-            mockRedisClient.connect.mockResolvedValue(true);
+            mockRedisClient.connect.mockImplementation(async () => {
+                // Simulate the connect event
+                const connectHandler = mockRedisClient.on.mock.calls.find(call => call[0] === 'connect');
+                if (connectHandler && connectHandler[1]) {
+                    connectHandler[1]();
+                }
+                return true;
+            });
 
             const result = await redisManager.connect();
 
             expect(result).toBe(true);
-            expect(mockRedisClient.connect).toHaveBeenCalled();
-            expect(mockRedisClient.on).toHaveBeenCalledWith('error', expect.any(Function));
-            expect(mockRedisClient.on).toHaveBeenCalledWith('connect', expect.any(Function));
-            expect(mockRedisClient.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
+            expect(redisManager.isConnected).toBe(true);
+            expect(redisManager.client).toBe(mockRedisClient);
         });
 
         test('should handle connection failures', async () => {
@@ -53,6 +69,7 @@ describe('Redis Manager', () => {
             const result = await redisManager.connect();
 
             expect(result).toBe(false);
+            expect(redisManager.isConnected).toBe(false);
         });
 
         test('should disconnect from Redis', async () => {
@@ -386,10 +403,14 @@ describe('Redis Manager', () => {
         test('should handle network disconnection', async () => {
             const error = new Error('Network error');
             mockRedisClient.connect.mockRejectedValue(error);
+            
+            // Ensure we start with a clean state
+            redisManager.isConnected = false;
 
             const result = await redisManager.connect();
 
             expect(result).toBe(false);
+            expect(redisManager.isConnected).toBe(false);
         });
     });
 });

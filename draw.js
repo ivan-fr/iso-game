@@ -733,18 +733,18 @@ export function drawGrid(
             let highlightType = 'none'; // To track highlight type for effects
 
             // Player move/aim highlights
-            if (playerState === 'idle' && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp)) {
+            if (playerState === 'idle' && reachableTiles && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp)) {
                 // Base highlight for reachable tiles
                 highlight = `rgba(46, 204, 113, ${0.15 + 0.15 * pulseSlow})`; // Pulsating alpha
                 highlightType = 'move_range';
-            } else if (playerState === 'aiming' && attackableTiles.some(t => t.x === x && t.y === y)) {
+            } else if (playerState === 'aiming' && attackableTiles && attackableTiles.some(t => t.x === x && t.y === y)) {
                 // Base highlight for attackable tiles (can also pulse if desired)
                 highlight = `rgba(52, 152, 219, ${0.15 + 0.15 * pulseSlow})`; // Pulsating blue alpha
                 highlightType = 'attack_range';
             }
             
             // Enemy hover range highlight (can override player highlights)
-            if (playerState !== 'aiming' && enemyHoveredReachableTiles.some(t => t.x === x && t.y === y)) {
+            if (playerState !== 'aiming' && enemyHoveredReachableTiles && enemyHoveredReachableTiles.some(t => t.x === x && t.y === y)) {
                 highlight = `rgba(230, 126, 34, ${0.35 + 0.15 * pulseSlow})`; // Pulsating orange alpha
                 highlightType = 'enemy_range';
             }
@@ -758,11 +758,11 @@ export function drawGrid(
             // Bright highlight for the primary action target tile (move/aim/hover)
             // This overrides previous highlights for the specific hovered tile
             if (primaryHoverX === x && primaryHoverY === y) { 
-                if (playerState === 'idle' && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp)) {
+                if (playerState === 'idle' && reachableTiles && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp)) {
                     // Use the faster pulse for the specific move target
                     highlight = `rgba(39, 174, 96, ${0.6 + 0.2 * pulseFast})`; 
                     highlightType = 'move_hover';
-                } else if (playerState === 'aiming' && attackableTiles.some(t => t.x === x && t.y === y)) {
+                } else if (playerState === 'aiming' && attackableTiles && attackableTiles.some(t => t.x === x && t.y === y)) {
                     // Use the faster pulse for the specific aim target
                     highlight = `rgba(41, 128, 185, ${0.6 + 0.2 * pulseFast})`;
                     highlightType = 'aim_hover';

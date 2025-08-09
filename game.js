@@ -35,10 +35,10 @@ export const getDefeatedEnemiesCount = () => gameState.defeatedEnemiesCount;
 
 // Legacy exports for modules still using direct access - to be migrated
 export let currentRoomId, currentMapGrid, currentGridCols, currentGridRows;
-export let currentTurn, playerState, reachableTiles, attackableTiles;
+export let currentTurn, playerState, reachableTiles = [], attackableTiles = [];
 export let isMoving, activeEnemy, gameOver, projectiles, hoveredTile;
 export let damageAnimations, buffAnimations, scheduledActions;
-export let defeatedEnemiesCount, enemyHoveredReachableTiles, hoveredEnemyId;
+export let defeatedEnemiesCount, enemyHoveredReachableTiles = [], hoveredEnemyId;
 export let enemiesState, bossState;
 
 // Sync function to update legacy exports when gameState changes

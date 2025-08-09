@@ -13,8 +13,10 @@ const mockSocket = {
     id: 'mock-socket-id'
 };
 
+const mockIo = jest.fn(() => mockSocket);
+
 jest.mock('socket.io-client', () => ({
-    io: jest.fn(() => mockSocket)
+    io: mockIo
 }));
 
 // Mock DOM elements
@@ -28,13 +30,10 @@ global.window = {
     location: { hostname: 'localhost', port: '3000' }
 };
 
-// Import the modules to test
-import { io } from 'socket.io-client';
-
 describe('Client-side Multiplayer', () => {
     let multiplayerClient;
     
-    beforeEach(() => {
+    beforeEach(async () => {
         jest.clearAllMocks();
         mockSocket.connected = false;
         
@@ -42,6 +41,8 @@ describe('Client-side Multiplayer', () => {
         mockSocket.emit.mockClear();
         mockSocket.on.mockClear();
         mockSocket.off.mockClear();
+        mockSocket.disconnect.mockClear();
+        mockIo.mockClear();
         
         // Create a simple multiplayer client for testing
         multiplayerClient = {
@@ -51,7 +52,8 @@ describe('Client-side Multiplayer', () => {
             lobbyId: null,
             
             connect() {
-                this.socket = io();
+                this.socket = mockIo(); // Use mockIo directly
+                this.isConnected = true;
                 this.setupEventHandlers();
                 return this.socket;
             },
@@ -116,7 +118,7 @@ describe('Client-side Multiplayer', () => {
         test('should establish connection to server', () => {
             const socket = multiplayerClient.connect();
             
-            expect(io).toHaveBeenCalledWith();
+            expect(mockIo).toHaveBeenCalledWith();
             expect(socket).toBe(mockSocket);
             expect(multiplayerClient.socket).toBe(mockSocket);
         });

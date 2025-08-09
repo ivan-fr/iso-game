@@ -1,26 +1,7 @@
 import { jest } from '@jest/globals';
 import { MultiplayerInventoryManager } from '../multiplayer-inventory.js';
-import multiplayerClient from '../client/multiplayer.js';
 
-// Mock dependencies before any other imports
-jest.mock('../client/multiplayer.js', () => ({
-    __esModule: true,
-    default: {
-        init: jest.fn(),
-        on: jest.fn(),
-        off: jest.fn(),
-        emit: jest.fn(),
-        requestInventorySync: jest.fn(),
-        craftItem: jest.fn(),
-        equipItem: jest.fn(),
-        unequipItem: jest.fn(),
-        isConnected: true,
-        socket: {
-            emit: jest.fn(),
-        },
-    }
-}));
-
+// Mock inventory.js which provides constants
 jest.mock('../inventory.js', () => ({
     allResources: {
         'wood': { name: 'Wood' },
@@ -49,6 +30,7 @@ jest.mock('../inventory.js', () => ({
 
 describe('MultiplayerInventoryManager', () => {
     let inventory;
+    let mockMultiplayerClient;
     let mockUpdateInventoryUI;
     let originalConsole;
 
@@ -72,9 +54,16 @@ describe('MultiplayerInventoryManager', () => {
             updateInventoryUI: mockUpdateInventoryUI,
             ...global.window,
         };
+
+        mockMultiplayerClient = {
+            requestInventorySync: jest.fn(),
+            craftItem: jest.fn(),
+            equipItem: jest.fn(),
+            isConnected: true,
+        };
         
         inventory = MultiplayerInventoryManager.getInstance();
-        inventory.initialize();
+        inventory.initialize(mockMultiplayerClient);
     });
 
     afterEach(() => {
@@ -92,20 +81,22 @@ describe('MultiplayerInventoryManager', () => {
             jest.useFakeTimers();
             MultiplayerInventoryManager.resetInstance();
             inventory = MultiplayerInventoryManager.getInstance();
-            inventory.initialize();
+            inventory.initialize(mockMultiplayerClient);
 
-            expect(multiplayerClient.requestInventorySync).toHaveBeenCalledTimes(1);
+            expect(mockMultiplayerClient.requestInventorySync).toHaveBeenCalledTimes(1);
             
             jest.advanceTimersByTime(30000);
-            expect(multiplayerClient.requestInventorySync).toHaveBeenCalledTimes(2);
+            expect(mockMultiplayerClient.requestInventorySync).toHaveBeenCalledTimes(2);
         });
 
         test('cleanup should clear the sync interval', () => {
             jest.useFakeTimers();
-            inventory.initialize(); // Called once here
+            // initialize is called in beforeEach
+            expect(mockMultiplayerClient.requestInventorySync).toHaveBeenCalledTimes(1);
+            
             inventory.cleanup();
             jest.advanceTimersByTime(60000);
-            expect(multiplayerClient.requestInventorySync).toHaveBeenCalledTimes(1);
+            expect(mockMultiplayerClient.requestInventorySync).toHaveBeenCalledTimes(1);
         });
 
         test('updateFromServer should update local data and clear pending changes', () => {
@@ -174,7 +165,7 @@ describe('MultiplayerInventoryManager', () => {
           const result = inventory.craftItem('craft_coiffe_sheep');
           
           expect(result).toBe(true);
-          expect(multiplayerClient.craftItem).toHaveBeenCalledWith('craft_coiffe_sheep');
+          expect(mockMultiplayerClient.craftItem).toHaveBeenCalledWith('craft_coiffe_sheep');
           expect(inventory.getResourceCount('laine_sheep')).toBe(0);
           expect(inventory.getResourceCount('corne_sheep')).toBe(0);
           expect(inventory.getItemCount('coiffe_sheep')).toBe(1);
@@ -183,7 +174,7 @@ describe('MultiplayerInventoryManager', () => {
         test('craftItem should fail if missing resources', () => {
             const result = inventory.craftItem('craft_coiffe_sheep');
             expect(result).toBe(false);
-            expect(multiplayerClient.craftItem).not.toHaveBeenCalled();
+            expect(mockMultiplayerClient.craftItem).not.toHaveBeenCalled();
         });
       });
     
@@ -195,7 +186,7 @@ describe('MultiplayerInventoryManager', () => {
         test('equipItem should send request and perform optimistic update', () => {
             const result = inventory.equipItem('helmet');
             expect(result).toBe(true);
-            expect(multiplayerClient.equipItem).toHaveBeenCalledWith('helmet');
+            expect(mockMultiplayerClient.equipItem).toHaveBeenCalledWith('helmet');
             expect(inventory.getEquippedItem('head')).toBe('helmet');
             expect(inventory.getItemCount('helmet')).toBe(0);
         });

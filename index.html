@@ -7,6 +7,196 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Multiplayer Styles */
+        .multiplayer-status {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .multiplayer-status.success { background: #4CAF50; color: white; }
+        .multiplayer-status.warning { background: #FF9800; color: white; }
+        .multiplayer-status.error { background: #f44336; color: white; }
+        .multiplayer-status.info { background: #2196F3; color: white; }
+        
+        .multiplayer-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        
+        .multiplayer-section h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 4px;
+        }
+        
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .lobby-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        
+        #mp-lobby-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 0.5rem;
+        }
+        
+        .lobby-item {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .lobby-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .lobby-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .lobby-players, .lobby-status {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .no-lobbies {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        .lobby-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .lobby-players-section {
+            margin-bottom: 1rem;
+        }
+        
+        #mp-lobby-player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .lobby-player {
+            background: rgba(255,255,255,0.1);
+            padding: 0.75rem;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .player-name {
+            font-weight: bold;
+        }
+        
+        .player-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .lobby-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        #multiplayer-button {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #multiplayer-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body>
     <div id="orientation-blocker">
@@ -135,11 +325,22 @@
 
     <script type="module" src="main.js"></script>
 
+    <!-- Socket.IO Client for Multiplayer -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
     <div id="ui-container">
         <button id="inventory-button" aria-label="Open Inventory">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-briefcase">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+        </button>
+        <button id="multiplayer-button" aria-label="Open Multiplayer" onclick="openMultiplayerPanel()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
         </button>
         <div id="player-stats">
@@ -149,6 +350,227 @@
             <div><span>Dmg Bonus:</span> <span id="ui-player-dmg-bonus">?</span></div>
         </div>
     </div>
+
+    <!-- Multiplayer Panel -->
+    <div id="multiplayer-panel" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeMultiplayerPanel()">&times;</span>
+            <h2>🌐 Multiplayer</h2>
+            
+            <!-- Connection Status -->
+            <div id="connection-status" class="multiplayer-status info">
+                <span>Connecting...</span>
+            </div>
+            
+            <!-- Player Name Setup -->
+            <div class="multiplayer-section">
+                <h3>Player Setup</h3>
+                <div class="input-group">
+                    <input type="text" id="mp-player-name" placeholder="Your Name" maxlength="20">
+                    <button class="btn secondary" onclick="updateMultiplayerPlayerName()">Set Name</button>
+                </div>
+            </div>
+            
+            <!-- Lobby Browser -->
+            <div class="multiplayer-section">
+                <h3>Lobbies</h3>
+                <div class="lobby-controls">
+                    <div class="input-group">
+                        <input type="text" id="mp-lobby-name" placeholder="Lobby Name" maxlength="50">
+                        <button class="btn" onclick="createMultiplayerLobby()">Create Lobby</button>
+                    </div>
+                    <button class="btn secondary" onclick="refreshMultiplayerLobbies()">
+                        <span id="mp-refresh-icon">🔄</span> Refresh
+                    </button>
+                </div>
+                <div id="mp-lobby-list">
+                    <div class="no-lobbies">Loading lobbies...</div>
+                </div>
+            </div>
+            
+            <!-- Lobby Room -->
+            <div id="mp-lobby-room" style="display: none;">
+                <div class="lobby-header">
+                    <div id="mp-lobby-info">
+                        <h3>Lobby Name</h3>
+                        <p>Players: 0/4</p>
+                        <p>Status: Waiting</p>
+                    </div>
+                    <button class="btn secondary" onclick="leaveMultiplayerLobby()">Leave Lobby</button>
+                </div>
+                
+                <div class="lobby-players-section">
+                    <h4>Players</h4>
+                    <div id="mp-lobby-player-list">
+                        <!-- Players will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="lobby-actions">
+                    <button id="mp-lobby-ready-btn" class="btn secondary" onclick="toggleMultiplayerReady()">Ready</button>
+                    <button id="mp-lobby-start-btn" class="btn" onclick="startMultiplayerGame()" style="display: none;">Start Game</button>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import multiplayer client
+        let multiplayerClient = null;
+        let isPlayerReady = false;
+        
+        // Initialize multiplayer when needed
+        async function initMultiplayer() {
+            if (!multiplayerClient) {
+                try {
+                    const module = await import('./client/multiplayer.js');
+                    multiplayerClient = module.default;
+                    
+                    // Set initial player name from localStorage
+                    const savedName = localStorage.getItem('multiplayer_player_name');
+                    if (savedName) {
+                        document.getElementById('mp-player-name').value = savedName;
+                        multiplayerClient.playerName = savedName;
+                    }
+                    
+                    // Connect to server
+                    await multiplayerClient.connect();
+                    updateConnectionStatus(true);
+                    
+                } catch (error) {
+                    console.error('Failed to initialize multiplayer:', error);
+                    updateConnectionStatus(false, error.message);
+                }
+            }
+        }
+        
+        // Global functions for multiplayer
+        window.openMultiplayerPanel = async function() {
+            await initMultiplayer();
+            document.getElementById('multiplayer-panel').style.display = 'flex';
+            refreshMultiplayerLobbies();
+        };
+        
+        window.closeMultiplayerPanel = function() {
+            document.getElementById('multiplayer-panel').style.display = 'none';
+        };
+        
+        window.updateMultiplayerPlayerName = function() {
+            const nameInput = document.getElementById('mp-player-name');
+            const newName = nameInput.value.trim();
+            
+            if (newName && multiplayerClient && newName !== multiplayerClient.playerName) {
+                multiplayerClient.playerName = newName;
+                localStorage.setItem('multiplayer_player_name', newName);
+                alert('Name updated!');
+            }
+        };
+        
+        window.createMultiplayerLobby = async function() {
+            if (!multiplayerClient) return;
+            
+            const lobbyNameInput = document.getElementById('mp-lobby-name');
+            const lobbyName = lobbyNameInput.value.trim() || `${multiplayerClient.playerName}'s Lobby`;
+            
+            try {
+                await multiplayerClient.createLobby(lobbyName);
+                lobbyNameInput.value = '';
+            } catch (error) {
+                console.error('Failed to create lobby:', error);
+                alert('Failed to create lobby: ' + error.message);
+            }
+        };
+        
+        window.refreshMultiplayerLobbies = function() {
+            if (!multiplayerClient) return;
+            
+            const refreshIcon = document.getElementById('mp-refresh-icon');
+            refreshIcon.style.animation = 'spin 1s linear';
+            
+            multiplayerClient.refreshLobbyList();
+            
+            setTimeout(() => {
+                refreshIcon.style.animation = '';
+            }, 1000);
+        };
+        
+        window.leaveMultiplayerLobby = async function() {
+            if (!multiplayerClient) return;
+            
+            try {
+                await multiplayerClient.leaveLobby();
+                isPlayerReady = false;
+                document.getElementById('mp-lobby-room').style.display = 'none';
+            } catch (error) {
+                console.error('Failed to leave lobby:', error);
+            }
+        };
+        
+        window.toggleMultiplayerReady = async function() {
+            if (!multiplayerClient) return;
+            
+            isPlayerReady = !isPlayerReady;
+            
+            try {
+                await multiplayerClient.setReady(isPlayerReady);
+                
+                const readyBtn = document.getElementById('mp-lobby-ready-btn');
+                readyBtn.textContent = isPlayerReady ? 'Not Ready' : 'Ready';
+                readyBtn.className = isPlayerReady ? 'btn' : 'btn secondary';
+                
+            } catch (error) {
+                console.error('Failed to set ready status:', error);
+                isPlayerReady = !isPlayerReady; // Revert on error
+            }
+        };
+        
+        window.startMultiplayerGame = async function() {
+            if (!multiplayerClient) return;
+            
+            try {
+                await multiplayerClient.startGame();
+                closeMultiplayerPanel();
+            } catch (error) {
+                console.error('Failed to start game:', error);
+                alert('Failed to start game: ' + error.message);
+            }
+        };
+        
+        function updateConnectionStatus(connected, message = '') {
+            const statusEl = document.getElementById('connection-status');
+            
+            if (connected) {
+                statusEl.className = 'multiplayer-status success';
+                statusEl.innerHTML = '<span>✓ Connected</span>';
+            } else {
+                statusEl.className = 'multiplayer-status error';
+                statusEl.innerHTML = `<span>✗ ${message || 'Disconnected'}</span>`;
+            }
+        }
+        
+        // Close multiplayer panel when clicking outside
+        document.addEventListener('click', (event) => {
+            const panel = document.getElementById('multiplayer-panel');
+            const button = document.getElementById('multiplayer-button');
+            
+            if (panel.style.display === 'flex' && 
+                !panel.contains(event.target) && 
+                !button.contains(event.target)) {
+                closeMultiplayerPanel();
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const panel = document.getElementById('multiplayer-panel');
+                if (panel.style.display === 'flex') {
+                    closeMultiplayerPanel();
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>

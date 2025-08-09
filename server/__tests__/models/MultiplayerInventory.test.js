@@ -12,7 +12,7 @@ const mockRedisManager = {
     isConnected: true
 };
 
-jest.mock('../../utils/redis.js', () => ({
+jest.unstable_mockModule('../../utils/redis.js', () => ({
     default: mockRedisManager,
     __esModule: true
 }));

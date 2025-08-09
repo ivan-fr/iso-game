@@ -5,7 +5,6 @@ import { jest } from '@jest/globals';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { io as Client } from 'socket.io-client';
-import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
 const mockRedisManager = {
@@ -23,7 +22,9 @@ const mockRedisManager = {
     isConnected: true
 };
 
-jest.mock('../../utils/redis.js', () => mockRedisManager);
+jest.unstable_mockModule('../../utils/redis.js', () => ({
+    default: mockRedisManager
+}));
 
 describe('Socket.IO Integration Tests', () => {
     let httpServer;

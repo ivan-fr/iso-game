@@ -582,28 +582,12 @@ function handleCanvasClick(event) {
     console.log(`[CLICK DEBUG] Screen Click: (${clickX.toFixed(1)}, ${clickY.toFixed(1)}) -> ISO Grid: (${clickedGrid.x}, ${clickedGrid.y})`);
 
     if (playerState === 'idle') {
-        // In lobby mode, allow movement to any valid grid position
-        if (isInLobby()) {
-            // Check if the clicked position is within grid bounds
-            if (clickedGrid.x >= 0 && clickedGrid.x < currentGridCols && 
-                clickedGrid.y >= 0 && clickedGrid.y < currentGridRows) {
-                // Check if the tile is walkable (not blocked by walls or obstacles)
-                if (currentMapGrid && currentMapGrid[clickedGrid.y] && currentMapGrid[clickedGrid.y][clickedGrid.x] !== 1) {
-                    moveEntityToLobby(player, clickedGrid.x, clickedGrid.y);
-                } else {
-                    showMessage('Case bloquée.');
-                }
-            } else {
-                showMessage('Case hors limites.');
-            }
+        // Normal game mode - check reachable tiles
+        const targetTile = reachableTiles.find(tile => tile.x === clickedGrid.x && tile.y === clickedGrid.y && tile.cost <= player.mp);
+        if (targetTile) {
+            moveEntityTo(player, targetTile.x, targetTile.y);
         } else {
-            // Normal game mode - check reachable tiles
-            const targetTile = reachableTiles.find(tile => tile.x === clickedGrid.x && tile.y === clickedGrid.y && tile.cost <= player.mp);
-            if (targetTile) {
-                moveEntityTo(player, targetTile.x, targetTile.y);
-            } else {
-                showMessage('Case invalide ou hors de portée.');
-            }
+            showMessage('Case invalide ou hors de portée.');
         }
     } else if (playerState === 'aiming') {
           // --- Determine Effective Target Tile (ALWAYS use hoveredTile now) --- 
@@ -627,7 +611,11 @@ function handleCanvasClick(event) {
               showMessage('Visée annulée (clic hors grille?)', 1500);
               playerState = 'idle';
               attackableTiles = [];
-              reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+              if (isInLobby()) {
+                  reachableTiles = [];
+              } else {
+                  reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+              }
               updateAllUIWrapper();
               return;
           }
@@ -645,7 +633,11 @@ function handleCanvasClick(event) {
                    // 4. Execute attack on the EFFECTIVE target tile
                    playerAttack(effectiveTargetTile.x, effectiveTargetTile.y);
                     playerState = 'idle';
-                    reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+                    if (isInLobby()) {
+                        reachableTiles = [];
+                    } else {
+                        reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+                    }
                     attackableTiles = [];
               } else {
                    // LoS failed
@@ -654,7 +646,11 @@ function handleCanvasClick(event) {
                    // Cancel aiming state but don't end turn or reset tiles
                    playerState = 'idle'; 
                    attackableTiles = [];
-                   reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+                   if (isInLobby()) {
+                       reachableTiles = [];
+                   } else {
+                       reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+                   }
                    updateAllUIWrapper(); // Update UI to show movement tiles again
                    return; // Stop further processing for this click
               }
@@ -665,7 +661,11 @@ function handleCanvasClick(event) {
                // Cancel aiming state
                playerState = 'idle';
                attackableTiles = [];
-               reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+               if (isInLobby()) {
+                   reachableTiles = [];
+               } else {
+                   reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+               }
                updateAllUIWrapper(); // Update UI
                return; // Stop further processing
           }
@@ -702,7 +702,11 @@ function handleKeyDown(e) {
         } else if (playerState === 'aiming') {
             playerState = 'idle';
             attackableTiles = [];
-            reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            if (isInLobby()) {
+                reachableTiles = [];
+            } else {
+                reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            }
             showMessage('Visée annulée', 1500);
         }
         updateAllUIWrapper();
@@ -710,7 +714,11 @@ function handleKeyDown(e) {
         if (playerState === 'aiming') {
             playerState = 'idle';
             attackableTiles = [];
-            reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            if (isInLobby()) {
+                reachableTiles = [];
+            } else {
+                reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            }
             showMessage('Visée annulée', 1500);
             updateAllUIWrapper();
         }
@@ -722,6 +730,12 @@ function handleKeyDown(e) {
 }
 
 function playerAttack(targetGridX, targetGridY) {
+    // Prevent attacking in lobby mode
+    if (isInLobby()) {
+        console.log("[LOBBY] Attack disabled in lobby mode");
+        return;
+    }
+    
     const spell = SPELLS[getSelectedSpellIndex()];
     if (player.ap < spell.cost) {
         showMessage('Pas assez de PA!');
@@ -899,7 +913,11 @@ function moveEntityTo(entity, targetGridX, targetGridY, forceMove = false) {
     // isMoving is set inside animateEntityFullPath
     animateEntityFullPath(entity, path, () => {
         if (entity === player) {
-            reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            if (isInLobby()) {
+                reachableTiles = [];
+            } else {
+                reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            }
             
             // Check for portal interactions
             checkPortalInteraction(targetGridX, targetGridY);
@@ -911,25 +929,18 @@ function moveEntityTo(entity, targetGridX, targetGridY, forceMove = false) {
 
 // Lobby movement function - no MP cost, no turn restrictions
 function moveEntityToLobby(entity, targetGridX, targetGridY) {
-    const allEntities = getAllLivingEntities();
-    const path = findPath(entity.gridX, entity.gridY, targetGridX, targetGridY, entity, 
-                        (x, y, ent, entities, grid, cols, rows) => gridUtils.isTileValidAndFree(x, y, ent, entities, grid, cols, rows),
-                        allEntities, 
-                        currentMapGrid,
-                        currentGridCols,
-                        currentGridRows);
-    
-    if (!path || path.length < 2) {
-        console.log("No path found or already at destination.");
-        return; 
-    }
-    
     if (isMoving) {
         console.log("Already moving, ignoring new movement request.");
         return;
     }
-
+    
     console.log(`[LOBBY MOVE] Moving ${entity.id} from (${entity.gridX}, ${entity.gridY}) to (${targetGridX}, ${targetGridY})`);
+
+    // For lobby movement, use direct path without complex pathfinding
+    const path = [
+        {x: entity.gridX, y: entity.gridY},
+        {x: targetGridX, y: targetGridY}
+    ];
 
     // Use the new full path animation function
     // isMoving is set inside animateEntityFullPath
@@ -1534,7 +1545,7 @@ function endTurnMobileHandler() {
 
 // Function to toggle aiming state (callable by button)
 export function toggleAimState() {
-    if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy) return;
+    if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy || isInLobby()) return;
 
     if (playerState === 'idle' && player.ap > 0) {
         playerState = 'aiming';
@@ -1548,7 +1559,11 @@ export function toggleAimState() {
     } else if (playerState === 'aiming') {
         playerState = 'idle';
         attackableTiles = [];
-        reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+        if (isInLobby()) {
+            reachableTiles = [];
+        } else {
+            reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+        }
         showMessage('Visée annulée', 1500);
     }
     updateAllUIWrapper();

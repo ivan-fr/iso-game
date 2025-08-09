@@ -21,12 +21,12 @@ const mockRedisClient = {
 };
 
 // Mock the createClient function
-jest.mock('redis', () => ({
+jest.unstable_mockModule('redis', () => ({
     createClient: jest.fn(() => mockRedisClient)
 }));
 
 // Mock the ErrorLogger to prevent console output during tests
-jest.mock('../../utils/errors.js', () => ({
+jest.unstable_mockModule('../../utils/errors.js', () => ({
     ErrorLogger: {
         log: jest.fn()
     },

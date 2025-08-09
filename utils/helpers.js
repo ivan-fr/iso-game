@@ -310,7 +310,8 @@ export class GameUtils {
      * @returns {boolean} True if entity is alive
      */
     static isAlive(entity) {
-        return entity && entity.hp > 0 && !entity._isDying;
+        if (!entity) return false;
+        return entity.hp > 0 && !entity._isDying;
     }
 
     /**

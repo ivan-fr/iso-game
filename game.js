@@ -5,39 +5,71 @@ import inventoryManager from './inventory.js';
 import { getRoomData } from './rooms.js';
 import { SPELLS, getSelectedSpellIndex, setSelectedSpell } from './spells.js';
 import { initAudioInteraction, playSound, setupSpellBarListeners, setupSpellTooltips, showMessage, stopSound, updateAllUI, updateTurnOrder } from './ui.js';
+import { gameState } from './state/gameState.js';
 
 // Assign player to window for global access
-window.player = player; 
+window.player = player;
 
-// Variables d'état globales
-export let currentRoomId = 0;
-export let currentMapGrid = [];
-export let currentGridCols = 0;
-export let currentGridRows = 0;
+// Initialize game state with player
+gameState.setPlayer(player);
 
-export let currentTurn = 'player';
-export let playerState = 'idle';
-export let reachableTiles = [];
-export let attackableTiles = [];
-export let isMoving = false;
-export let activeEnemy = null;
-export let gameOver = false;
-export let projectiles = [];
-export let hoveredTile = null;
-export let damageAnimations = [];
-export let buffAnimations = []; // NEW: Array for buff animations
-export let scheduledActions = []; // NEW: Array for delayed actions
+// Getters for backward compatibility - gradually migrate to direct gameState usage
+export const getCurrentRoomId = () => gameState.currentRoomId;
+export const getCurrentMapGrid = () => gameState.currentMapGrid;
+export const getCurrentGridCols = () => gameState.currentGridCols;
+export const getCurrentGridRows = () => gameState.currentGridRows;
+export const getCurrentTurn = () => gameState.currentTurn;
+export const getPlayerState = () => gameState.playerState;
+export const getReachableTiles = () => gameState.reachableTiles;
+export const getAttackableTiles = () => gameState.attackableTiles;
+export const getIsMoving = () => gameState.isMoving;
+export const getActiveEnemy = () => gameState.activeEnemy;
+export const getGameOver = () => gameState.gameOver;
+export const getProjectiles = () => gameState.projectiles;
+export const getHoveredTile = () => gameState.hoveredTile;
+export const getDamageAnimations = () => gameState.damageAnimations;
+export const getBuffAnimations = () => gameState.buffAnimations;
+export const getEnemiesState = () => gameState.enemiesState;
+export const getBossState = () => gameState.bossState;
+export const getDefeatedEnemiesCount = () => gameState.defeatedEnemiesCount;
 
-// NEW: Enemy defeat tracking
-export let defeatedEnemiesCount = { sheep: 0, sheepist_noir: 0, chef_de_guerre: 0, sheep_royal: 0 };
+// Legacy exports for modules still using direct access - to be migrated
+export let currentRoomId, currentMapGrid, currentGridCols, currentGridRows;
+export let currentTurn, playerState, reachableTiles, attackableTiles;
+export let isMoving, activeEnemy, gameOver, projectiles, hoveredTile;
+export let damageAnimations, buffAnimations, scheduledActions;
+export let defeatedEnemiesCount, enemyHoveredReachableTiles, hoveredEnemyId;
+export let enemiesState, bossState;
 
-// NEW: State for enemy hover highlights
-export let enemyHoveredReachableTiles = [];
-export let hoveredEnemyId = null;
+// Sync function to update legacy exports when gameState changes
+function syncLegacyExports() {
+    currentRoomId = gameState.currentRoomId;
+    currentMapGrid = gameState.currentMapGrid;
+    currentGridCols = gameState.currentGridCols;
+    currentGridRows = gameState.currentGridRows;
+    currentTurn = gameState.currentTurn;
+    playerState = gameState.playerState;
+    reachableTiles = gameState.reachableTiles;
+    attackableTiles = gameState.attackableTiles;
+    isMoving = gameState.isMoving;
+    activeEnemy = gameState.activeEnemy;
+    gameOver = gameState.gameOver;
+    projectiles = gameState.projectiles;
+    hoveredTile = gameState.hoveredTile;
+    damageAnimations = gameState.damageAnimations;
+    buffAnimations = gameState.buffAnimations;
+    enemiesState = gameState.enemiesState;
+    bossState = gameState.bossState;
+    defeatedEnemiesCount = gameState.defeatedEnemiesCount;
+}
 
-// Dynamic entity states
-export let enemiesState = [];
-export let bossState = null;
+// Subscribe to state changes to keep legacy exports in sync
+gameState.subscribe('*', () => {
+    syncLegacyExports();
+});
+
+// Initialize legacy exports
+syncLegacyExports();
 
 // Ajout : référence au canvas et contexte
 let canvas;
@@ -45,19 +77,17 @@ let ctx;
 
 // Helper pour la LoS avec sheeps
 function hasLineOfSightAllEntities(startX, startY, endX, endY) {
-    return gridUtils.hasLineOfSight(startX, startY, endX, endY, [player, boss, ...enemiesState]);
+    return gridUtils.hasLineOfSight(startX, startY, endX, endY, [player, gameState.bossState, ...gameState.enemiesState]);
 }
 
 // Helper to get all living entities
 export function getAllLivingEntities() {
-    const livingEnemies = enemiesState.filter(e => e.hp > 0);
-    const livingBoss = bossState && bossState.hp > 0 ? [bossState] : [];
-    return [player, ...livingBoss, ...livingEnemies];
+    return gameState.getLivingEntities();
 }
 
 // Refactored LoS check
 function hasLineOfSightWithCurrentGrid(startX, startY, endX, endY, blockingEntities) {
-    return gridUtils.hasLineOfSight(startX, startY, endX, endY, blockingEntities, currentMapGrid);
+    return gridUtils.hasLineOfSight(startX, startY, endX, endY, blockingEntities, gameState.currentMapGrid);
 }
 
 // Wrapper function for updateAllUI

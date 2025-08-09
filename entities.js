@@ -1,62 +1,143 @@
+/**
+ * Game Entities Module
+ * Entity definitions, creation, and pathfinding logic
+ * @fileoverview Manages player, enemies, and AI entities with pathfinding
+ */
+
+import { PLAYER_STATS, BOSS_STATS, ENEMY_TYPES } from './constants.js';
+import { GameUtils, MathUtils } from './utils/helpers.js';
+import { ErrorLogger, EntityError, PathfindingError, Validator } from './utils/errors.js';
+
 // --- Entités principales ---
 
-// Base class (optional, but good practice)
+/**
+ * Base Entity class for all game entities
+ * @class Entity
+ */
 export class Entity {
+    /**
+     * Creates a new entity
+     * @param {number} gridX - Grid X coordinate
+     * @param {number} gridY - Grid Y coordinate
+     * @param {number} size - Visual size of the entity
+     * @param {number} hp - Current hit points
+     * @param {number} maxHp - Maximum hit points
+     * @param {number} mp - Current movement points
+     * @param {number} ap - Current action points
+     * @param {string} type - Entity type identifier
+     * @param {string|null} id - Unique identifier (auto-generated if null)
+     */
     constructor(gridX, gridY, size, hp, maxHp, mp, ap, type = 'unknown', id = null) {
-        this.id = id ?? crypto.randomUUID(); // Unique ID for targeting/state
+        this.id = id ?? GameUtils.generateId(type);
         this.gridX = gridX;
         this.gridY = gridY;
         this.size = size;
         this.hp = hp;
         this.maxHp = maxHp;
-        this.mp = mp; // Current move points
-        this.ap = ap; // Current action points
-        this.maxMp = mp; // Store max MP
-        this.maxAp = ap; // Store max AP
+        this.mp = mp;
+        this.ap = ap;
+        this.maxMp = mp;
+        this.maxAp = ap;
         this.aiType = type;
         this.screenX = null;
         this.screenY = null;
-        // AI state helpers
-        this.usedSpecialThisTurn = false; 
+        this.usedSpecialThisTurn = false;
+
+        // Validate the created entity
+        try {
+            Validator.validateEntity(this);
+        } catch (error) {
+            throw new EntityError(`Invalid entity creation: ${error.message}`, this.id, type);
+        }
+    }
+
+    /**
+     * Checks if this entity is alive
+     * @returns {boolean} True if entity is alive
+     */
+    isAlive() {
+        return GameUtils.isAlive(this);
+    }
+
+    /**
+     * Checks if this entity is adjacent to another entity
+     * @param {Entity} other - Other entity
+     * @returns {boolean} True if entities are adjacent
+     */
+    isAdjacentTo(other) {
+        return GameUtils.areAdjacent(this, other);
+    }
+
+    /**
+     * Checks if this entity is within range of another entity
+     * @param {Entity} other - Other entity
+     * @param {number} range - Range to check
+     * @returns {boolean} True if within range
+     */
+    isInRangeOf(other, range) {
+        return GameUtils.isInRange(this, other, range);
+    }
+
+    /**
+     * Gets Manhattan distance to another entity
+     * @param {Entity} other - Other entity
+     * @returns {number} Manhattan distance
+     */
+    distanceTo(other) {
+        return MathUtils.manhattanDistance(this.gridX, this.gridY, other.gridX, other.gridY);
+    }
+
+    /**
+     * Sanitizes entity data for safe operations
+     * @returns {Object} Sanitized entity data
+     */
+    sanitize() {
+        return GameUtils.sanitizeEntity(this);
     }
 }
 
 // Specific entity types (can inherit from Entity if needed)
 
-// Player definition (remains mostly the same, using new props)
+/**
+ * Player entity definition using constants
+ * @type {Object}
+ */
 export let player = {
     id: 'player',
-    gridX: 2,
-    gridY: 2,
+    gridX: PLAYER_STATS.STARTING_X,
+    gridY: PLAYER_STATS.STARTING_Y,
     size: 28,
-    hp: 100,
-    maxHp: 100,
-    mp: 6,
-    maxMp: 6,
-    ap: 2,
-    maxAp: 2,
-    baseMaxAp: 2, // Base AP without equipment
-    baseMaxMp: 6, // Base MP without equipment
-    baseDamage: 10, // Base damage for spells
+    hp: PLAYER_STATS.MAX_HP,
+    maxHp: PLAYER_STATS.MAX_HP,
+    mp: PLAYER_STATS.BASE_MAX_MP,
+    maxMp: PLAYER_STATS.BASE_MAX_MP,
+    ap: PLAYER_STATS.BASE_MAX_AP,
+    maxAp: PLAYER_STATS.BASE_MAX_AP,
+    baseMaxAp: PLAYER_STATS.BASE_MAX_AP,
+    baseMaxMp: PLAYER_STATS.BASE_MAX_MP,
+    baseDamage: PLAYER_STATS.BASE_DAMAGE,
     aiType: 'player',
     screenX: null,
     screenY: null,
-    usedSpecialThisTurn: false // Not used for player, but consistent
+    usedSpecialThisTurn: false
 };
 
-// Boss definition (remains mostly the same)
+/**
+ * Boss entity definition using constants
+ * @type {Object}
+ */
 export let boss = {
     id: 'boss',
     gridX: 11, // Default, will be overwritten by room data
     gridY: 11,
     size: 36,
-    hp: 150,
-    maxHp: 150,
-    mp: 6,
-    maxMp: 6,
-    ap: 2,
-    maxAp: 2,
-    aiType: 'boss',
+    hp: BOSS_STATS.MAX_HP,
+    maxHp: BOSS_STATS.MAX_HP,
+    mp: BOSS_STATS.MAX_MP,
+    maxMp: BOSS_STATS.MAX_MP,
+    ap: BOSS_STATS.MAX_AP,
+    maxAp: BOSS_STATS.MAX_AP,
+    aiType: ENEMY_TYPES.BOSS,
     screenX: null,
     screenY: null,
     usedSpecialThisTurn: false
@@ -64,40 +145,60 @@ export let boss = {
 
 // --- New Enemy Definitions ---
 
+/**
+ * Creates a new enemy entity of the specified type
+ * @param {string} type - Enemy type (sheep, sheepist_noir, chef_de_guerre, boss)
+ * @param {number} gridX - Grid X coordinate
+ * @param {number} gridY - Grid Y coordinate
+ * @returns {Object|null} Enemy entity or null if invalid type
+ * @throws {EntityError} If coordinates are invalid
+ */
 export function createEnemy(type, gridX, gridY) {
+    // Validate input parameters
+    if (typeof gridX !== 'number' || typeof gridY !== 'number') {
+        throw new EntityError('Invalid coordinates for enemy creation', null, type);
+    }
+
     let enemyData;
-    const id = `${type}-${crypto.randomUUID().substring(0, 4)}`;
+    const id = GameUtils.generateId(type);
+    
     switch (type) {
-        case 'sheep':
+        case ENEMY_TYPES.SHEEP:
             enemyData = {
                 size: 26, hp: 50, maxHp: 50, mp: 4, ap: 1, 
                 image: 'sheep.png', maxMp: 4, maxAp: 1
             };
             break;
-        case 'sheepist_noir':
+        case ENEMY_TYPES.SHEEPIST_NOIR:
             enemyData = {
                 size: 24, hp: 60, maxHp: 60, mp: 6, ap: 2,
                 image: 'sheepist_noir.png', maxMp: 6, maxAp: 2 
             };
             break;
-        case 'chef_de_guerre':
+        case ENEMY_TYPES.CHEF_DE_GUERRE:
              enemyData = {
                 size: 30, hp: 100, maxHp: 100, mp: 4, ap: 2,
                 image: 'chef.png', maxMp: 4, maxAp: 2
             };
             break;
-        case 'boss': // Allow creating the boss this way too
+        case ENEMY_TYPES.BOSS:
              enemyData = {
-                size: 36, hp: 150, maxHp: 150, mp: 6, ap: 2,
-                 image: 'boss.png', maxMp: 6, maxAp: 2
+                size: 36, 
+                hp: BOSS_STATS.MAX_HP, 
+                maxHp: BOSS_STATS.MAX_HP, 
+                mp: BOSS_STATS.MAX_MP, 
+                ap: BOSS_STATS.MAX_AP,
+                image: 'boss.png', 
+                maxMp: BOSS_STATS.MAX_MP, 
+                maxAp: BOSS_STATS.MAX_AP
             };
             break;
         default:
-            console.error(`Unknown enemy type: ${type}`);
+            ErrorLogger.log(new EntityError(`Unknown enemy type: ${type}`, id, type));
             return null;
     }
 
-    return {
+    const enemy = {
         id: id,
         gridX,
         gridY,
@@ -107,6 +208,15 @@ export function createEnemy(type, gridX, gridY) {
         screenY: null,
         usedSpecialThisTurn: false,
     };
+
+    // Validate created enemy
+    try {
+        Validator.validateEntity(enemy);
+    } catch (error) {
+        throw new EntityError(`Failed to create valid enemy: ${error.message}`, id, type);
+    }
+
+    return enemy;
 }
 
 

@@ -1,4 +1,12 @@
-// Fonctions liées à la grille, obstacles, conversions, BFS, LoS
+/**
+ * Grid Utilities Module
+ * Functions related to grid management, obstacles, conversions, pathfinding, and line of sight
+ * @fileoverview Grid utilities for isometric game with pathfinding and coordinate transformations
+ */
+
+import { TILE_W, TILE_H, PROJECTILE_SPEED } from './constants.js';
+import { GameUtils } from './utils/helpers.js';
+import { ErrorLogger, ValidationError } from './utils/errors.js';
 
 // --- Constants & Configuration ---
 
@@ -131,17 +139,15 @@ function bfs(grid, start, end, sheepsList = []) {
  */
 
 // --- Configuration & Constants ---
-export const TILE_W = 80;
-export const TILE_H = TILE_W / 2;
-// Removed GRID_COLS / GRID_ROWS constants as they are dynamic now
-// export const GRID_COLS = 14;
-// export const GRID_ROWS = 14;
+// Constants are now imported from constants.js
+export { TILE_W, TILE_H, PROJECTILE_SPEED };
 
-// Add dynamic camera offset variables
+/**
+ * Dynamic camera offset variables for viewport management
+ * @type {number}
+ */
 export let cameraOffsetX = 0;
 export let cameraOffsetY = 0;
-
-export const PROJECTILE_SPEED = 8;
 // Removed unused/game-logic constants - they belong in game.js or entities.js
 // export const PLAYER_ATTACK_DAMAGE = 15;
 // export const BOSS_ATTACK_DAMAGE = 10;
@@ -158,13 +164,30 @@ export const PROJECTILE_SPEED = 8;
 
 // --- Camera & Coordinate Transformations ---
 
-// Function to update the camera offset to center the grid
+/**
+ * Updates camera offset to center the grid in the viewport
+ * @param {number} canvasWidth - Canvas width in pixels
+ * @param {number} canvasHeight - Canvas height in pixels  
+ * @param {number} currentGridCols - Number of grid columns
+ * @param {number} currentGridRows - Number of grid rows
+ * @throws {ValidationError} If grid dimensions are invalid
+ */
 export function updateCameraOffset(canvasWidth, canvasHeight, currentGridCols, currentGridRows) {
-    // Calculate the total pixel width/height of the isometric grid
-    // const totalGridPixelWidth = (currentGridCols + currentGridRows) * (TILE_W / 2);
-    // const totalGridPixelHeight = (currentGridCols + currentGridRows) * (TILE_H / 2);
+    // Validate input parameters
+    if (typeof canvasWidth !== 'number' || canvasWidth <= 0) {
+        throw new ValidationError('Canvas width must be a positive number', 'canvasWidth', canvasWidth);
+    }
+    if (typeof canvasHeight !== 'number' || canvasHeight <= 0) {
+        throw new ValidationError('Canvas height must be a positive number', 'canvasHeight', canvasHeight);
+    }
+    
+    try {
+        GameUtils.validateCoordinates(0, 0, currentGridCols, currentGridRows);
+    } catch (error) {
+        throw new ValidationError('Invalid grid dimensions', 'gridDimensions', { currentGridCols, currentGridRows });
+    }
 
-    // Simpler approach: Calculate the screen position of the logical center tile
+    // Calculate the screen position of the logical center tile
     const centerGridX = Math.floor(currentGridCols / 2);
     const centerGridY = Math.floor(currentGridRows / 2);
 
@@ -175,17 +198,31 @@ export function updateCameraOffset(canvasWidth, canvasHeight, currentGridCols, c
     // The desired offset makes this point appear at canvasWidth/2, canvasHeight/2
     cameraOffsetX = canvasWidth / 2 - centerScreenX_noOffset;
     // Adjust vertical offset slightly to show more ground below the center
-    cameraOffsetY = canvasHeight / 2 - centerScreenY_noOffset + TILE_H * 1.5; // Adjust multiplier as needed
+    cameraOffsetY = canvasHeight / 2 - centerScreenY_noOffset + TILE_H * 1.5;
 
     console.log(`Camera Offset updated: X=${cameraOffsetX.toFixed(1)}, Y=${cameraOffsetY.toFixed(1)}`);
 }
 
+/**
+ * Converts isometric grid coordinates to screen coordinates
+ * @param {number} gridX - Grid X coordinate
+ * @param {number} gridY - Grid Y coordinate
+ * @returns {{x: number, y: number}} Screen coordinates
+ */
 export function isoToScreen(gridX, gridY) {
     const screenX = cameraOffsetX + (gridX - gridY) * (TILE_W / 2);
     const screenY = cameraOffsetY + (gridX + gridY) * (TILE_H / 2);
     return { x: screenX, y: screenY };
 }
 
+/**
+ * Converts screen coordinates to isometric grid coordinates with boundary clamping
+ * @param {number} screenX - Screen X coordinate
+ * @param {number} screenY - Screen Y coordinate
+ * @param {number} currentGridCols - Number of grid columns for boundary checking
+ * @param {number} currentGridRows - Number of grid rows for boundary checking
+ * @returns {{x: number, y: number}} Clamped grid coordinates
+ */
 export function screenToIso(screenX, screenY, currentGridCols, currentGridRows) {
     const adjustedX = screenX - cameraOffsetX;
     const adjustedY = screenY - cameraOffsetY;
@@ -194,14 +231,10 @@ export function screenToIso(screenX, screenY, currentGridCols, currentGridRows) 
     const halfTileW = TILE_W / 2;
     const halfTileH = TILE_H / 2;
 
+    // Mathematical transformation:
     // gridX * halfTileW - gridY * halfTileW = adjustedX
     // gridX * halfTileH + gridY * halfTileH = adjustedY
-    // Divide by halfTileW/H respectively:
-    // gridX - gridY = adjustedX / halfTileW
-    // gridX + gridY = adjustedY / halfTileH
-    // Add the two equations: 2 * gridX = (adjustedX / halfTileW) + (adjustedY / halfTileH)
-    // Subtract the first from the second: 2 * gridY = (adjustedY / halfTileH) - (adjustedX / halfTileW)
-
+    // Solving the system of equations:
     const gridX_exact = ((adjustedX / halfTileW) + (adjustedY / halfTileH)) / 2;
     const gridY_exact = ((adjustedY / halfTileH) - (adjustedX / halfTileW)) / 2;
 
@@ -209,7 +242,7 @@ export function screenToIso(screenX, screenY, currentGridCols, currentGridRows) 
     const gridX = Math.round(gridX_exact);
     const gridY = Math.round(gridY_exact);
 
-    // Clamp to grid boundaries
+    // Clamp to grid boundaries for safety
     const clampedX = Math.max(0, Math.min(currentGridCols - 1, gridX));
     const clampedY = Math.max(0, Math.min(currentGridRows - 1, gridY));
 

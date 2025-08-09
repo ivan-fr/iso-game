@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometric Game - Multiplayer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .multiplayer-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        /* Connection Status */
+        .multiplayer-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
+
+        .multiplayer-status.success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .multiplayer-status.warning {
+            background: #FF9800;
+            color: white;
+        }
+
+        .multiplayer-status.error {
+            background: #f44336;
+            color: white;
+        }
+
+        .multiplayer-status.info {
+            background: #2196F3;
+            color: white;
+        }
+
+        /* Lobby Browser */
+        #lobby-browser {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            flex: 1;
+        }
+
+        .lobby-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .input-group input {
+            padding: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 4px;
+            backdrop-filter: blur(10px);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Lobby List */
+        .lobby-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        #lobby-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .lobby-item {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .lobby-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .lobby-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .lobby-players, .lobby-status {
+            opacity: 0.8;
+        }
+
+        .no-lobbies {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        /* Lobby Room */
+        #lobby-room {
+            display: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            flex: 1;
+        }
+
+        .lobby-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .lobby-players-section {
+            margin-bottom: 2rem;
+        }
+
+        #lobby-player-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .lobby-player {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-name {
+            font-weight: bold;
+        }
+
+        .player-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .lobby-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Game Canvas */
+        #gameCanvas {
+            display: none;
+            margin: 0 auto;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: #000;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .lobby-controls {
+                flex-direction: column;
+            }
+
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #lobby-list {
+                grid-template-columns: 1fr;
+            }
+
+            .lobby-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .lobby-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Connection Indicator */
+        .connection-indicator {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f44336;
+            animation: pulse 2s infinite;
+        }
+
+        .connection-dot.connected {
+            background: #4CAF50;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="multiplayer-container">
+        <header class="header">
+            <h1>🏰 Isometric Dungeon - Multiplayer</h1>
+            <p>Connect with friends and explore dungeons together!</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Lobby Browser -->
+            <div id="lobby-browser">
+                <div class="lobby-controls">
+                    <div class="input-group">
+                        <input type="text" id="lobby-name-input" placeholder="Lobby Name" maxlength="50">
+                        <button class="btn" onclick="createLobby()">Create Lobby</button>
+                    </div>
+                    <button class="btn secondary" onclick="refreshLobbies()">
+                        <span id="refresh-icon">🔄</span> Refresh
+                    </button>
+                    <div class="input-group">
+                        <input type="text" id="player-name-input" placeholder="Your Name" maxlength="20">
+                        <button class="btn secondary" onclick="updatePlayerName()">Set Name</button>
+                    </div>
+                </div>
+
+                <div class="lobby-section">
+                    <h3>Available Lobbies</h3>
+                    <div id="lobby-list">
+                        <div class="no-lobbies">Loading lobbies...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lobby Room -->
+            <div id="lobby-room">
+                <div class="lobby-header">
+                    <div id="lobby-info">
+                        <h3>Lobby Name</h3>
+                        <p>Players: 0/4</p>
+                        <p>Status: Waiting</p>
+                    </div>
+                    <button class="btn secondary" onclick="leaveLobby()">Leave Lobby</button>
+                </div>
+
+                <div class="lobby-players-section">
+                    <h4>Players</h4>
+                    <div id="lobby-player-list">
+                        <!-- Players will be populated here -->
+                    </div>
+                </div>
+
+                <div class="lobby-actions">
+                    <button id="lobby-ready-btn" class="btn secondary" onclick="toggleReady()">Ready</button>
+                    <button id="lobby-start-btn" class="btn" onclick="startGame()" style="display: none;">Start Game</button>
+                </div>
+            </div>
+
+            <!-- Game Canvas (hidden initially) -->
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </main>
+
+        <!-- Connection Status -->
+        <div class="connection-indicator">
+            <div id="connection-dot" class="connection-dot"></div>
+            <span id="connection-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    
+    <!-- Import multiplayer client as module -->
+    <script type="module">
+        import multiplayerClient from './client/multiplayer.js';
+        
+        // Global variables
+        let isPlayerReady = false;
+        
+        // Initialize connection when page loads
+        window.addEventListener('load', async () => {
+            try {
+                // Set initial player name from localStorage or prompt
+                const savedName = localStorage.getItem('multiplayer_player_name');
+                if (savedName) {
+                    document.getElementById('player-name-input').value = savedName;
+                    multiplayerClient.playerName = savedName;
+                }
+                
+                // Connect to server
+                await multiplayerClient.connect();
+                
+                // Update connection indicator
+                updateConnectionIndicator(true);
+                
+            } catch (error) {
+                console.error('Failed to connect:', error);
+                updateConnectionIndicator(false, error.message);
+            }
+        });
+
+        // Global functions for UI interactions
+        window.createLobby = async function() {
+            const lobbyNameInput = document.getElementById('lobby-name-input');
+            const lobbyName = lobbyNameInput.value.trim() || `${multiplayerClient.playerName}'s Lobby`;
+            
+            try {
+                await multiplayerClient.createLobby(lobbyName);
+                lobbyNameInput.value = '';
+            } catch (error) {
+                console.error('Failed to create lobby:', error);
+                alert('Failed to create lobby: ' + error.message);
+            }
+        };
+
+        window.refreshLobbies = function() {
+            const refreshIcon = document.getElementById('refresh-icon');
+            refreshIcon.style.animation = 'spin 1s linear';
+            
+            multiplayerClient.refreshLobbyList();
+            
+            setTimeout(() => {
+                refreshIcon.style.animation = '';
+            }, 1000);
+        };
+
+        window.updatePlayerName = function() {
+            const nameInput = document.getElementById('player-name-input');
+            const newName = nameInput.value.trim();
+            
+            if (newName && newName !== multiplayerClient.playerName) {
+                multiplayerClient.playerName = newName;
+                localStorage.setItem('multiplayer_player_name', newName);
+                alert('Name updated! Reconnect to apply changes.');
+            }
+        };
+
+        window.leaveLobby = async function() {
+            try {
+                await multiplayerClient.leaveLobby();
+                isPlayerReady = false;
+            } catch (error) {
+                console.error('Failed to leave lobby:', error);
+            }
+        };
+
+        window.toggleReady = async function() {
+            isPlayerReady = !isPlayerReady;
+            
+            try {
+                await multiplayerClient.setReady(isPlayerReady);
+                
+                const readyBtn = document.getElementById('lobby-ready-btn');
+                readyBtn.textContent = isPlayerReady ? 'Not Ready' : 'Ready';
+                readyBtn.className = isPlayerReady ? 'btn' : 'btn secondary';
+                
+            } catch (error) {
+                console.error('Failed to set ready status:', error);
+                isPlayerReady = !isPlayerReady; // Revert on error
+            }
+        };
+
+        window.startGame = async function() {
+            try {
+                await multiplayerClient.startGame();
+            } catch (error) {
+                console.error('Failed to start game:', error);
+                alert('Failed to start game: ' + error.message);
+            }
+        };
+
+        // Connection indicator
+        function updateConnectionIndicator(connected, message = '') {
+            const dot = document.getElementById('connection-dot');
+            const text = document.getElementById('connection-text');
+            
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = 'Connected';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = message || 'Disconnected';
+            }
+        }
+
+        // Listen for connection changes
+        window.addEventListener('online', () => {
+            if (!multiplayerClient.isConnected) {
+                multiplayerClient.connect().catch(console.error);
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            updateConnectionIndicator(false, 'Offline');
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (multiplayerClient.isConnected) {
+                multiplayerClient.disconnect();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                
+                if (activeElement.id === 'lobby-name-input') {
+                    createLobby();
+                } else if (activeElement.id === 'player-name-input') {
+                    updatePlayerName();
+                }
+            } else if (event.key === 'Escape') {
+                if (multiplayerClient.currentLobby) {
+                    leaveLobby();
+                }
+            }
+        });
+
+        // Make multiplayerClient available globally
+        window.multiplayerClient = multiplayerClient;
+    </script>
+</body>
+</html>

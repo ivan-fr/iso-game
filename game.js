@@ -157,12 +157,24 @@ function startPlayerTurn() {
         console.log(`[TURN START] Player MP reduced by ${mpReduction} due to effect. Starting MP: ${player.mp}`);
     }
 
-    reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+    // In lobby mode, don't show movement restrictions
+    if (isInLobby()) {
+        reachableTiles = [];
+        console.log("[LOBBY] Not calculating reachable tiles - free movement in lobby");
+    } else {
+        reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+    }
+    
     attackableTiles = [];
     updateAllUIWrapper();
     updateTurnOrder(currentTurn, bossState);
     playSound('turn');
-    showMessage('Tour du Joueur', 1500);
+    
+    if (isInLobby()) {
+        showMessage('Welcome to the lobby! Move freely and explore the portals.', 2000);
+    } else {
+        showMessage('Tour du Joueur', 1500);
+    }
 }
 
 async function startEnemyTurns() {
@@ -652,6 +664,13 @@ function handleKeyDown(e) {
         updateAllUIWrapper();
         return;
     }
+    
+    // In lobby mode, disable combat controls
+    if (isInLobby()) {
+        console.log("[LOBBY] Combat controls disabled in lobby mode");
+        return;
+    }
+    
     if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy) return;
     if (e.key === ' ' || e.key.toLowerCase() === 'e') {
         e.preventDefault();
@@ -899,6 +918,9 @@ function moveEntityToLobby(entity, targetGridX, targetGridY) {
     // isMoving is set inside animateEntityFullPath
     animateEntityFullPath(entity, path, () => {
         if (entity === player) {
+            // In lobby, don't calculate reachable tiles - clear them for unlimited movement
+            reachableTiles = [];
+            
             // Check for portal interactions
             checkPortalInteraction(targetGridX, targetGridY);
             

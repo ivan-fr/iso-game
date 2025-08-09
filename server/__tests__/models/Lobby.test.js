@@ -7,10 +7,16 @@ import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
 jest.mock('../../utils/redis.js', () => ({
-    updateLobby: jest.fn(),
-    getLobby: jest.fn(),
-    deleteLobby: jest.fn(),
-    getActiveLobbies: jest.fn()
+    default: {
+        createLobby: jest.fn(),
+        getLobby: jest.fn(),
+        updateLobby: jest.fn(),
+        deleteLobby: jest.fn(),
+        getActiveLobbies: jest.fn(),
+        connect: jest.fn().mockResolvedValue(true),
+        disconnect: jest.fn(),
+        isConnected: true
+    }
 }));
 
 describe('Lobby Model', () => {

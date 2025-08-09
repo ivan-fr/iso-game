@@ -6,14 +6,23 @@ import { MultiplayerInventory } from '../../models/MultiplayerInventory.js';
 import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
-jest.mock('../../utils/redis.js', () => ({
+const mockRedisManager = {
     savePlayerInventory: jest.fn(),
-    getPlayerInventory: jest.fn()
+    getPlayerInventory: jest.fn(),
+    connect: jest.fn().mockResolvedValue(true),
+    disconnect: jest.fn(),
+    isConnected: true
+};
+
+jest.mock('../../utils/redis.js', () => ({
+    default: mockRedisManager
 }));
 
 describe('MultiplayerInventory Model', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockRedisManager.savePlayerInventory.mockResolvedValue(true);
+        mockRedisManager.getPlayerInventory.mockResolvedValue(null);
     });
 
     describe('Inventory Creation', () => {
@@ -171,7 +180,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should craft item successfully', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             const result = await inventory.craftItem('craft_coiffe_sheep');
             

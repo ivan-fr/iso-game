@@ -7,9 +7,13 @@ import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
 jest.mock('../../utils/redis.js', () => ({
-    savePlayerData: jest.fn(),
-    getPlayerData: jest.fn(),
-    playerExists: jest.fn()
+    default: {
+        savePlayerData: jest.fn(),
+        getPlayerData: jest.fn(),
+        connect: jest.fn().mockResolvedValue(true),
+        disconnect: jest.fn(),
+        isConnected: true
+    }
 }));
 
 describe('Player Model', () => {

@@ -28,7 +28,9 @@ class MultiplayerClient {
         try {
             console.log('[Multiplayer] Connecting to server...');
             
-            this.socket = io(process.env.SERVER_URL || 'http://localhost:3001', {
+            // Browser-safe check for environment variables
+            const serverUrl = (typeof process !== 'undefined' && process.env && process.env.SERVER_URL) || 'http://localhost:3001';
+            this.socket = io(serverUrl, {
                 autoConnect: false,
                 reconnection: true,
                 reconnectionAttempts: 5,

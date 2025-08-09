@@ -458,7 +458,10 @@ export class GameStateManager {
     _initializeSubscriptions() {
         // Log important state changes in development
         this._state.subscribe(['currentTurn', 'playerState', 'gameOver'], (changes) => {
-            if (process.env.NODE_ENV === 'development') {
+            // Browser-safe check for development environment
+            const isDevelopment = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') || 
+                                 (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost');
+            if (isDevelopment) {
                 console.log('[GameState] State changed:', changes);
             }
         });

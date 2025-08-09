@@ -172,7 +172,10 @@ export function startGameLoop() {
         }
         
         // Log performance stats every 5 seconds in development
-        if (process.env.NODE_ENV === 'development' && frameCount % 300 === 0) {
+        // Check if we're in browser environment and use a fallback for process.env
+        const isDevelopment = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') || 
+                             (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost');
+        if (isDevelopment && frameCount % 300 === 0) {
             console.log(`[Performance] Frame ${frameCount}: ${frameTime.toFixed(2)}ms (avg: ${averageFrameTime.toFixed(2)}ms, ~${(1000/averageFrameTime).toFixed(1)}fps)`);
         }
         

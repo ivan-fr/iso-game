@@ -220,7 +220,7 @@ export class GameStateManager {
         // Initialize state
         const initialState = {
             // Room and grid state
-            currentRoomId: 0,
+            currentRoomId: -1, // Start in lobby (-1)
             currentMapGrid: [],
             currentGridCols: 0,
             currentGridRows: 0,

@@ -6,22 +6,28 @@ import { Lobby } from '../../models/Lobby.js';
 import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
+const mockRedisManager = {
+    createLobby: jest.fn(),
+    getLobby: jest.fn(),
+    updateLobby: jest.fn(),
+    deleteLobby: jest.fn(),
+    getActiveLobbies: jest.fn(),
+    connect: jest.fn().mockResolvedValue(true),
+    disconnect: jest.fn(),
+    isConnected: true
+};
+
 jest.mock('../../utils/redis.js', () => ({
-    default: {
-        createLobby: jest.fn(),
-        getLobby: jest.fn(),
-        updateLobby: jest.fn(),
-        deleteLobby: jest.fn(),
-        getActiveLobbies: jest.fn(),
-        connect: jest.fn().mockResolvedValue(true),
-        disconnect: jest.fn(),
-        isConnected: true
-    }
+    default: mockRedisManager
 }));
 
 describe('Lobby Model', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockRedisManager.updateLobby.mockResolvedValue(true);
+        mockRedisManager.deleteLobby.mockResolvedValue(true);
+        mockRedisManager.getLobby.mockResolvedValue(null);
+        mockRedisManager.getActiveLobbies.mockResolvedValue([]);
     });
 
     describe('Lobby Creation', () => {
@@ -197,7 +203,7 @@ describe('Lobby Model', () => {
         });
 
         test('should start game successfully', async () => {
-            redisManager.updateLobby.mockResolvedValue(true);
+            mockRedisManager.updateLobby.mockResolvedValue(true);
 
             const gameSessionId = await lobby.startGame();
             
@@ -233,7 +239,7 @@ describe('Lobby Model', () => {
         });
 
         test('should transition through game states', async () => {
-            redisManager.updateLobby.mockResolvedValue(true);
+            mockRedisManager.updateLobby.mockResolvedValue(true);
 
             // Start game
             await lobby.startGame();
@@ -270,7 +276,7 @@ describe('Lobby Model', () => {
 
     describe('Lobby Persistence', () => {
         test('should save lobby to Redis', async () => {
-            redisManager.updateLobby.mockResolvedValue(true);
+            mockRedisManager.updateLobby.mockResolvedValue(true);
 
             const lobby = new Lobby({ id: 'test-lobby', name: 'Test Lobby' });
             const result = await lobby.save();
@@ -280,7 +286,7 @@ describe('Lobby Model', () => {
         });
 
         test('should delete lobby from Redis', async () => {
-            redisManager.deleteLobby.mockResolvedValue(true);
+            mockRedisManager.deleteLobby.mockResolvedValue(true);
 
             const lobby = new Lobby({ id: 'test-lobby' });
             const result = await lobby.delete();
@@ -299,7 +305,7 @@ describe('Lobby Model', () => {
                 createdAt: Date.now()
             };
 
-            redisManager.getLobby.mockResolvedValue(lobbyData);
+            mockRedisManager.getLobby.mockResolvedValue(lobbyData);
 
             const lobby = await Lobby.load('test-lobby');
             
@@ -327,7 +333,7 @@ describe('Lobby Model', () => {
                 }
             ];
 
-            redisManager.getActiveLobbies.mockResolvedValue(lobbiesData);
+            mockRedisManager.getActiveLobbies.mockResolvedValue(lobbiesData);
 
             const lobbies = await Lobby.getActiveLobbies();
             

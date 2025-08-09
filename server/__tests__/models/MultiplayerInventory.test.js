@@ -235,7 +235,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should replace equipped item', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             // Equip first item
             await inventory.equipItem('coiffe_sheep');
@@ -266,7 +266,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should unequip item successfully', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             // First equip an item
             await inventory.equipItem('coiffe_sheep');
@@ -307,7 +307,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should calculate drops from defeated enemies', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             // Mock random to always succeed
             const originalRandom = Math.random;
@@ -331,7 +331,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should handle no drops from enemies', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             // Mock random to always fail
             const originalRandom = Math.random;
@@ -353,7 +353,7 @@ describe('MultiplayerInventory Model', () => {
 
     describe('Persistence', () => {
         test('should save inventory to Redis', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             const inventory = new MultiplayerInventory('player-1');
             inventory.addResource('laine_sheep', 10);
@@ -377,7 +377,7 @@ describe('MultiplayerInventory Model', () => {
                 version: 5
             };
 
-            redisManager.getPlayerInventory.mockResolvedValue(inventoryData);
+            mockRedisManager.getPlayerInventory.mockResolvedValue(inventoryData);
 
             const inventory = await MultiplayerInventory.load('player-1');
             
@@ -390,7 +390,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should create new inventory for new player', async () => {
-            redisManager.getPlayerInventory.mockResolvedValue(null);
+            mockRedisManager.getPlayerInventory.mockResolvedValue(null);
 
             const inventory = await MultiplayerInventory.load('new-player');
             

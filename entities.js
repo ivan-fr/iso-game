@@ -5,7 +5,7 @@
  */
 
 import { PLAYER_STATS, BOSS_STATS, ENEMY_TYPES } from './constants.js';
-import { GameUtils, MathUtils } from './utils/helpers.js';
+import { GameUtils, MathUtils, PerformanceUtils } from './utils/helpers.js';
 import { ErrorLogger, EntityError, PathfindingError, Validator } from './utils/errors.js';
 
 // --- Entités principales ---
@@ -231,7 +231,12 @@ export function createEnemy(type, gridX, gridY) {
 
 // Pathfinding (A*)
 export function findPath(startX, startY, endX, endY, entity, isTileValidAndFree, currentEntities, currentMapGrid, currentGridCols, currentGridRows, adjacentToTarget = false) {
-    if (startX === endX && startY === endY) return [{x: startX, y: startY}];
+    PerformanceUtils.startTimer('pathfinding');
+    
+    if (startX === endX && startY === endY) {
+        PerformanceUtils.endTimer('pathfinding');
+        return [{x: startX, y: startY}];
+    }
     
     // Optimization check:
     const isTargetTileValid = isTileValidAndFree(endX, endY, entity, currentEntities, currentMapGrid, currentGridCols, currentGridRows);
@@ -310,6 +315,12 @@ export function findPath(startX, startY, endX, endY, entity, isTileValidAndFree,
                 path.push(cameFrom[currKey]);
                 currKey = key(cameFrom[currKey].x, cameFrom[currKey].y);
             }
+            
+            const pathTime = PerformanceUtils.endTimer('pathfinding');
+            if (pathTime > 10) { // Log slow pathfinding operations
+                console.warn(`[Performance] Slow pathfinding: ${pathTime.toFixed(2)}ms for (${startX},${startY}) -> (${endX},${endY}), path length: ${path.length}`);
+            }
+            
             return path.reverse();
         }
         closed.add(key(current.x, current.y));
@@ -348,5 +359,11 @@ export function findPath(startX, startY, endX, endY, entity, isTileValidAndFree,
             }
         }
     }
+    
+    const pathTime = PerformanceUtils.endTimer('pathfinding');
+    if (pathTime > 10) { // Log slow pathfinding operations
+        console.warn(`[Performance] Slow pathfinding: ${pathTime.toFixed(2)}ms for (${startX},${startY}) -> (${endX},${endY})`);
+    }
+    
     return null;
 }

@@ -5,8 +5,13 @@
  */
 
 import { TILE_W, TILE_H, PROJECTILE_SPEED } from './constants.js';
-import { GameUtils } from './utils/helpers.js';
+import { GameUtils, PerformanceUtils } from './utils/helpers.js';
 import { ErrorLogger, ValidationError } from './utils/errors.js';
+
+// Cache for expensive calculations
+const tileRangeCache = new Map();
+const MAX_CACHE_SIZE = 100;
+let cacheAccessCount = 0;
 
 // --- Constants & Configuration ---
 
@@ -342,9 +347,41 @@ export function hasLineOfSight(startX, startY, endX, endY, blockingEntities = []
     return true; // No blocking tiles/entities found
 }
 
+/**
+ * Creates a cache key for tile range calculations
+ * @param {number} startX - Starting X coordinate
+ * @param {number} startY - Starting Y coordinate  
+ * @param {number} maxRange - Maximum range
+ * @param {Array} allEntities - All entities for collision checking
+ * @param {boolean} includeOrigin - Whether to include origin tile
+ * @param {Array} currentMapGrid - Current map grid
+ * @returns {string} Cache key
+ */
+function createTileRangeCacheKey(startX, startY, maxRange, allEntities, includeOrigin, currentMapGrid) {
+    // Create a simplified key based on entity positions and map state
+    const entityPositions = allEntities
+        .filter(e => e && e.hp > 0 && !e._isDying)
+        .map(e => `${e.gridX},${e.gridY}`)
+        .sort()
+        .join('|');
+    
+    return `${startX},${startY},${maxRange},${includeOrigin},${entityPositions}`;
+}
+
 // Breadth-First Search to find all reachable tiles within a given range (cost).
 // Considers obstacles and living entities as blockers.
 export function getTilesInRangeBFS(startX, startY, maxRange, allEntities = [], includeOrigin = false, currentMapGrid, currentGridCols, currentGridRows) {
+    PerformanceUtils.startTimer('tileRangeBFS');
+    
+    // Check cache first
+    const cacheKey = createTileRangeCacheKey(startX, startY, maxRange, allEntities, includeOrigin, currentMapGrid);
+    cacheAccessCount++;
+    
+    if (tileRangeCache.has(cacheKey)) {
+        PerformanceUtils.endTimer('tileRangeBFS');
+        return tileRangeCache.get(cacheKey);
+    }
+    
     const visited = new Set();
     const queue = [{ x: startX, y: startY, cost: 0 }];
     const reachable = [];
@@ -393,6 +430,25 @@ export function getTilesInRangeBFS(startX, startY, maxRange, allEntities = [], i
             }
         }
     }
+    
+    // Cache the result
+    if (tileRangeCache.size >= MAX_CACHE_SIZE) {
+        // Simple LRU: remove oldest entry
+        const firstKey = tileRangeCache.keys().next().value;
+        tileRangeCache.delete(firstKey);
+    }
+    tileRangeCache.set(cacheKey, reachable);
+    
+    const bfsTime = PerformanceUtils.endTimer('tileRangeBFS');
+    if (bfsTime > 5) {
+        console.warn(`[Performance] Slow BFS: ${bfsTime.toFixed(2)}ms for range ${maxRange} from (${startX},${startY})`);
+    }
+    
+    // Log cache statistics occasionally
+    if (cacheAccessCount % 50 === 0) {
+        console.log(`[Performance] Tile range cache: ${tileRangeCache.size} entries, ${cacheAccessCount} accesses`);
+    }
+    
     return reachable;
 }
 

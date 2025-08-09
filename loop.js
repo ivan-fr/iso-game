@@ -1,10 +1,10 @@
 import { drawBackground, drawBuffAnimations, drawDamageAnimations, drawEndGameOverlay, drawGrid, drawProjectiles, drawTile } from './draw.js';
-import { player } from './entities.js'; // Import initial states only for reference? Unused here.
+import { player } from './entities.js';
 import {
     attackableTiles,
     bossState,
     buffAnimations,
-    currentGridCols, currentGridRows, // Use dynamic states
+    currentGridCols, currentGridRows,
     currentMapGrid,
     damageAnimations,
     enemiesState,
@@ -16,8 +16,9 @@ import {
     projectiles,
     reachableTiles
 } from './game.js';
-import { TILE_H, TILE_W, hasLineOfSight } from './grid.js'; // Keep TILE sizes, LoS import?
+import { TILE_H, TILE_W, hasLineOfSight } from './grid.js';
 import { SPELLS, getSelectedSpellIndex } from './spells.js';
+import { PerformanceUtils } from './utils/helpers.js';
 
 // Image loading (mimic game_legacy.js)
 const tileImage = new window.Image();
@@ -80,8 +81,15 @@ window.loadedImageStatus = {
      caisse: window.caisseImage.complete // Use direct complete status
 };
 
+// Performance tracking
+let frameCount = 0;
+let lastFrameTime = 0;
+let averageFrameTime = 16.67; // ~60fps
+
 export function startGameLoop() {
-    function gameLoop() {
+    function gameLoop(timestamp = 0) {
+        PerformanceUtils.startTimer('gameLoop');
+        
         const canvas = document.getElementById('gameCanvas');
         if (!canvas) return; // Skip frame if canvas not ready
         const ctx = canvas.getContext('2d');
@@ -97,9 +105,12 @@ export function startGameLoop() {
         window.loadedImageStatus.arbre = window.arbreImage.complete;
         window.loadedImageStatus.caisse = window.caisseImage.complete;
 
+        PerformanceUtils.startTimer('drawBackground');
         drawBackground(ctx, canvas);
+        PerformanceUtils.endTimer('drawBackground');
 
         // Get current entities to draw
+        PerformanceUtils.startTimer('entityMapping');
         const currentEntities = [
             { entity: player, image: window.loadedImages.player, loaded: window.loadedImageStatus.player },
              ...(bossState ? [{ entity: bossState, image: window.loadedImages.boss, loaded: window.loadedImageStatus.boss }] : []),
@@ -109,8 +120,10 @@ export function startGameLoop() {
                  loaded: window.loadedImageStatus[e.aiType] ?? false
              }))
          ].filter(item => !!item.entity); // Keep only entities that exist, DO NOT filter by hp > 0
+        PerformanceUtils.endTimer('entityMapping');
 
         // Call drawGrid with current state
+        PerformanceUtils.startTimer('drawGrid');
         drawGrid(
             ctx,
             currentMapGrid, // Pass current map
@@ -133,13 +146,35 @@ export function startGameLoop() {
             enemyHoveredReachableTiles,
             hoveredEnemyId
         );
+        PerformanceUtils.endTimer('drawGrid');
 
+        PerformanceUtils.startTimer('drawEffects');
         drawProjectiles(ctx, projectiles, SPELLS);
         drawDamageAnimations(ctx, damageAnimations, TILE_W); // Pass TILE_W
         drawBuffAnimations(ctx, buffAnimations);
         drawEndGameOverlay(ctx, canvas, gameOver, player);
+        PerformanceUtils.endTimer('drawEffects');
         
+        PerformanceUtils.startTimer('gameTick');
         gameTick(); // Updates projectiles etc.
+        PerformanceUtils.endTimer('gameTick');
+        
+        // Performance monitoring
+        const frameTime = PerformanceUtils.endTimer('gameLoop');
+        frameCount++;
+        
+        // Calculate moving average frame time
+        averageFrameTime = averageFrameTime * 0.9 + frameTime * 0.1;
+        
+        // Log performance warnings if frame takes too long
+        if (frameTime > 33.33) { // More than ~30fps
+            console.warn(`[Performance] Slow frame: ${frameTime.toFixed(2)}ms (avg: ${averageFrameTime.toFixed(2)}ms)`);
+        }
+        
+        // Log performance stats every 5 seconds in development
+        if (process.env.NODE_ENV === 'development' && frameCount % 300 === 0) {
+            console.log(`[Performance] Frame ${frameCount}: ${frameTime.toFixed(2)}ms (avg: ${averageFrameTime.toFixed(2)}ms, ~${(1000/averageFrameTime).toFixed(1)}fps)`);
+        }
         
         requestAnimationFrame(gameLoop);
     }

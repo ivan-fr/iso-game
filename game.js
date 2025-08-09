@@ -98,31 +98,32 @@ function updateAllUIWrapper() {
         bossApDisplay: document.getElementById('boss-ap'),
         bossMpDisplay: document.getElementById('boss-mp'),
         player,
-        boss: bossState,
-        enemiesState,
+        boss: gameState.bossState,
+        enemiesState: gameState.enemiesState,
         enemyCountDisplay: document.getElementById('sheep-count'),
         enemyTotalDisplay: document.getElementById('sheep-total'),
         enemyHpSummaryDisplay: document.getElementById('sheep-hp-summary'),
         playerHealthBar: document.getElementById('player-health-bar'),
         bossHealthBar: document.getElementById('boss-health-bar'),
-        currentTurn,
-        isMoving,
-        activeEnemy,
-        playerState,
+        currentTurn: gameState.currentTurn,
+        isMoving: gameState.isMoving,
+        activeEnemy: gameState.activeEnemy,
+        playerState: gameState.playerState,
         endTurnButton: document.getElementById('end-turn-button'),
-        mobileEndTurnButton: document.getElementById('mobile-end-turn-button'), // Add this
-        gameOver
+        mobileEndTurnButton: document.getElementById('mobile-end-turn-button'),
+        gameOver: gameState.gameOver
     });
 }
 
 function endTurn() {
-    if (isMoving || activeEnemy || gameOver || playerState !== 'idle') return;
-    if (currentTurn === 'player') {
+    if (gameState.isMoving || gameState.activeEnemy || gameState.gameOver || gameState.playerState !== 'idle') return;
+    if (gameState.currentTurn === 'player') {
         // Reset player AP/MP at the END of their turn
         console.log("[TURN END] Resetting Player AP/MP before enemy turn.");
         player.ap = player.maxAp;
         player.mp = player.maxMp;
         player.mpReducedThisTurn = 0; // Also reset reduction flag here
+        gameState.setPlayer(player); // Update state
         updateAllUIWrapper(); // Update UI to show reset values before enemy turn starts
         
         startEnemyTurns();

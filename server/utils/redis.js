@@ -98,6 +98,11 @@ class RedisManager {
 
     // Inventory-specific operations
     async savePlayerInventory(playerId, inventory) {
+        if (!this.isConnected) {
+            const error = new GameError('Redis is not connected. Cannot save inventory.', 'REDIS_NOT_CONNECTED');
+            ErrorLogger.log(error);
+            return false;
+        }
         try {
             const key = `player:${playerId}:inventory`;
             await this.client.set(key, JSON.stringify(inventory));
@@ -110,6 +115,11 @@ class RedisManager {
     }
 
     async getPlayerInventory(playerId) {
+        if (!this.isConnected) {
+            const error = new GameError('Redis is not connected. Cannot get inventory.', 'REDIS_NOT_CONNECTED');
+            ErrorLogger.log(error);
+            return null;
+        }
         try {
             const key = `player:${playerId}:inventory`;
             const result = await this.client.get(key);

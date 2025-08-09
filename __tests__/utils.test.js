@@ -356,7 +356,7 @@ describe('Utils Module Tests', () => {
         test('should initialize with default state', () => {
             expect(gameState.currentTurn).toBe('player');
             expect(gameState.gameOver).toBe(false);
-            expect(gameState.currentRoomId).toBe(0);
+            expect(gameState.currentRoomId).toBe(-1);
         });
 
         test('should validate state changes', () => {

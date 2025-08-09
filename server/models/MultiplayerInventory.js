@@ -148,6 +148,10 @@ export class MultiplayerInventory {
      * Loads player inventory from Redis
      */
     static async load(playerId) {
+        if (!redisManager.isConnected) {
+            console.warn(`[Inventory] Redis not connected. Creating a temporary inventory for player ${playerId}.`);
+            return new MultiplayerInventory(playerId);
+        }
         try {
             const data = await redisManager.getPlayerInventory(playerId);
             
@@ -169,6 +173,10 @@ export class MultiplayerInventory {
      * Saves inventory to Redis
      */
     async save() {
+        if (!redisManager.isConnected) {
+            console.warn(`[Inventory] Redis not connected. Skipping save for player ${this.playerId}.`);
+            return false;
+        }
         try {
             this.lastSaved = Date.now();
             this.version++;

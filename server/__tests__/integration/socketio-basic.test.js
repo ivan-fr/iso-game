@@ -65,6 +65,14 @@ describe('Socket.IO Basic Integration', () => {
 
     test('should handle multiple message types', (done) => {
         let messagesReceived = 0;
+        let completed = false;
+        
+        const checkCompletion = () => {
+            if (messagesReceived === 2 && !completed) {
+                completed = true;
+                done();
+            }
+        };
         
         serverSocket.on('player-action', (data) => {
             serverSocket.emit('action-confirmed', { actionId: data.actionId });
@@ -78,12 +86,12 @@ describe('Socket.IO Basic Integration', () => {
 
         clientSocket.on('action-confirmed', (data) => {
             expect(data.actionId).toBe('move-123');
-            if (messagesReceived === 2) done();
+            checkCompletion();
         });
 
         clientSocket.on('state-updated', (data) => {
             expect(data.gameId).toBe('game-456');
-            if (messagesReceived === 2) done();
+            checkCompletion();
         });
 
         clientSocket.emit('player-action', { actionId: 'move-123' });

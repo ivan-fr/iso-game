@@ -582,11 +582,28 @@ function handleCanvasClick(event) {
     console.log(`[CLICK DEBUG] Screen Click: (${clickX.toFixed(1)}, ${clickY.toFixed(1)}) -> ISO Grid: (${clickedGrid.x}, ${clickedGrid.y})`);
 
     if (playerState === 'idle') {
-        const targetTile = reachableTiles.find(tile => tile.x === clickedGrid.x && tile.y === clickedGrid.y && tile.cost <= player.mp);
-        if (targetTile) {
-            moveEntityTo(player, targetTile.x, targetTile.y);
+        // In lobby mode, allow movement to any valid grid position
+        if (isInLobby()) {
+            // Check if the clicked position is within grid bounds
+            if (clickedGrid.x >= 0 && clickedGrid.x < currentGridCols && 
+                clickedGrid.y >= 0 && clickedGrid.y < currentGridRows) {
+                // Check if the tile is walkable (not blocked by walls or obstacles)
+                if (currentMapGrid && currentMapGrid[clickedGrid.y] && currentMapGrid[clickedGrid.y][clickedGrid.x] !== 1) {
+                    moveEntityToLobby(player, clickedGrid.x, clickedGrid.y);
+                } else {
+                    showMessage('Case bloquée.');
+                }
+            } else {
+                showMessage('Case hors limites.');
+            }
         } else {
-            showMessage('Case invalide ou hors de portée.');
+            // Normal game mode - check reachable tiles
+            const targetTile = reachableTiles.find(tile => tile.x === clickedGrid.x && tile.y === clickedGrid.y && tile.cost <= player.mp);
+            if (targetTile) {
+                moveEntityTo(player, targetTile.x, targetTile.y);
+            } else {
+                showMessage('Case invalide ou hors de portée.');
+            }
         }
     } else if (playerState === 'aiming') {
           // --- Determine Effective Target Tile (ALWAYS use hoveredTile now) --- 

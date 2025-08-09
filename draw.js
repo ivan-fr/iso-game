@@ -734,11 +734,15 @@ export function drawGrid(
             let highlight = null;
             let highlightType = 'none'; // To track highlight type for effects
 
-            // Player move/aim highlights
+            // Player move/aim highlights - but not in lobby mode
             if (playerState === 'idle' && reachableTiles && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp)) {
-                // Base highlight for reachable tiles
-                highlight = `rgba(46, 204, 113, ${0.15 + 0.15 * pulseSlow})`; // Pulsating alpha
-                highlightType = 'move_range';
+                // Check if we're in lobby mode - if so, don't show reachable tiles highlights
+                const inLobby = currentRoomId === -1; // Lobby is room -1
+                if (!inLobby) {
+                    // Base highlight for reachable tiles
+                    highlight = `rgba(46, 204, 113, ${0.15 + 0.15 * pulseSlow})`; // Pulsating alpha
+                    highlightType = 'move_range';
+                }
             } else if (playerState === 'aiming' && attackableTiles && attackableTiles.some(t => t.x === x && t.y === y)) {
                 // Base highlight for attackable tiles (can also pulse if desired)
                 highlight = `rgba(52, 152, 219, ${0.15 + 0.15 * pulseSlow})`; // Pulsating blue alpha
@@ -760,8 +764,9 @@ export function drawGrid(
             // Bright highlight for the primary action target tile (move/aim/hover)
             // This overrides previous highlights for the specific hovered tile
             if (primaryHoverX === x && primaryHoverY === y) { 
-                if (playerState === 'idle' && reachableTiles && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp)) {
-                    // Use the faster pulse for the specific move target
+                const inLobby = currentRoomId === -1; // Lobby is room -1
+                if (playerState === 'idle' && reachableTiles && reachableTiles.some(t => t.x === x && t.y === y && t.cost <= player.mp) && !inLobby) {
+                    // Use the faster pulse for the specific move target (only if not in lobby)
                     highlight = `rgba(39, 174, 96, ${0.6 + 0.2 * pulseFast})`; 
                     highlightType = 'move_hover';
                 } else if (playerState === 'aiming' && attackableTiles && attackableTiles.some(t => t.x === x && t.y === y)) {

@@ -583,6 +583,9 @@ document.addEventListener('DOMContentLoaded', () => {
          const oldPlayerApDisplay = document.getElementById('player-ap'); // Moved up
          const oldPlayerMpDisplay = document.getElementById('player-mp'); // Moved up
 
+        // Check if we're in lobby mode - if so, show infinity symbols for AP/MP
+        const inLobby = window.currentGame && window.currentGame.isInLobby && window.currentGame.isInLobby();
+
         // if (typeof window.player !== 'undefined' && typeof inventoryManager !== 'undefined') { // Check passed player instead
         if (player && typeof inventoryManager !== 'undefined') {
             // const player = window.player; // Use local ref - NO, use parameter
@@ -598,18 +601,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (hpDisplay) hpDisplay.textContent = currentHp;
             if (maxHpDisplay) maxHpDisplay.textContent = maxHp;
-            if (apDisplay) apDisplay.textContent = currentAp;
-            if (maxApDisplay) maxApDisplay.textContent = maxAp;
-            if (mpDisplay) mpDisplay.textContent = currentMp;
-            if (maxMpDisplay) maxMpDisplay.textContent = maxMp;
+            
+            // In lobby mode, show infinite AP/MP; otherwise show actual values
+            if (inLobby) {
+                if (apDisplay) apDisplay.textContent = '∞';
+                if (maxApDisplay) maxApDisplay.textContent = '∞';
+                if (mpDisplay) mpDisplay.textContent = '∞';
+                if (maxMpDisplay) maxMpDisplay.textContent = '∞';
+                if (oldPlayerApDisplay) oldPlayerApDisplay.textContent = 'AP: ∞';
+                if (oldPlayerMpDisplay) oldPlayerMpDisplay.textContent = 'MP: ∞';
+            } else {
+                if (apDisplay) apDisplay.textContent = currentAp;
+                if (maxApDisplay) maxApDisplay.textContent = maxAp;
+                if (mpDisplay) mpDisplay.textContent = currentMp;
+                if (maxMpDisplay) maxMpDisplay.textContent = maxMp;
+                if (oldPlayerApDisplay) oldPlayerApDisplay.textContent = `AP: ${currentAp}`;
+                if (oldPlayerMpDisplay) oldPlayerMpDisplay.textContent = `MP: ${currentMp}`;
+            }
+            
             if (dmgBonusDisplay) {
                 dmgBonusDisplay.textContent = damageBonus > 0 ? `+${damageBonus}` : '0';
                 dmgBonusDisplay.style.color = damageBonus > 0 ? '#4CAF50' : 'inherit'; // Green if bonus > 0
             }
-
-            // Also update the AP/MP display in the older info bar for consistency?
-            if (oldPlayerApDisplay) oldPlayerApDisplay.textContent = `AP: ${currentAp}`;
-            if (oldPlayerMpDisplay) oldPlayerMpDisplay.textContent = `MP: ${currentMp}`; // Updated format
 
             // Update player health bar in the older info bar
             if (playerHealthBar) {

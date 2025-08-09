@@ -29,9 +29,9 @@ jest.mock('socket.io-client', () => ({
   io: jest.fn(() => mockSocket),
 }));
 
-import { MultiplayerInventory } from '../multiplayer-inventory.js';
+import { MultiplayerInventoryManager } from '../multiplayer-inventory.js';
 
-describe('MultiplayerInventory', () => {
+describe('MultiplayerInventoryManager', () => {
   let inventory;
 
   beforeEach(() => {

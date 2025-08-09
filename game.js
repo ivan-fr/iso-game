@@ -872,6 +872,56 @@ function moveEntityTo(entity, targetGridX, targetGridY, forceMove = false) {
     });
 }
 
+// Lobby movement function - no MP cost, no turn restrictions
+function moveEntityToLobby(entity, targetGridX, targetGridY) {
+    const allEntities = getAllLivingEntities();
+    const path = findPath(entity.gridX, entity.gridY, targetGridX, targetGridY, entity, 
+                        (x, y, ent, entities, grid, cols, rows) => gridUtils.isTileValidAndFree(x, y, ent, entities, grid, cols, rows),
+                        allEntities, 
+                        currentMapGrid,
+                        currentGridCols,
+                        currentGridRows);
+    
+    if (!path || path.length < 2) {
+        console.log("No path found or already at destination.");
+        return; 
+    }
+    
+    if (isMoving) {
+        console.log("Already moving, ignoring new movement request.");
+        return;
+    }
+
+    console.log(`[LOBBY MOVE] Moving ${entity.id} from (${entity.gridX}, ${entity.gridY}) to (${targetGridX}, ${targetGridY})`);
+
+    // Use the new full path animation function
+    // isMoving is set inside animateEntityFullPath
+    animateEntityFullPath(entity, path, () => {
+        if (entity === player) {
+            // Check for portal interactions
+            checkPortalInteraction(targetGridX, targetGridY);
+            
+            // Send position update to other players in multiplayer
+            sendPlayerPositionUpdate(targetGridX, targetGridY);
+        }
+        // isMoving is reset inside animateEntityFullPath
+        updateAllUIWrapper();
+    });
+}
+
+// Send player position update to multiplayer server
+function sendPlayerPositionUpdate(gridX, gridY) {
+    // Check if multiplayer client is available and connected
+    if (typeof window.multiplayerClient !== 'undefined' && window.multiplayerClient && window.multiplayerClient.isConnected) {
+        console.log(`[MULTIPLAYER] Sending position update: (${gridX}, ${gridY})`);
+        window.multiplayerClient.sendGameAction({
+            type: 'move',
+            position: { gridX, gridY },
+            roomId: currentRoomId
+        });
+    }
+}
+
 // Check if player moved onto a portal tile
 function checkPortalInteraction(gridX, gridY) {
     const roomData = getRoomData(currentRoomId);

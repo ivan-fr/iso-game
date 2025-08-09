@@ -362,7 +362,7 @@ export function computesheepistNoirPlan(sheepistNoir, allEntities, mapGrid, cols
         return (priority[bKey] ?? 0) - (priority[aKey] ?? 0);
     });
 
-    console.log("[AI] sheepistNoir Possible Actions:", possibleActions);
+    // console.log("[AI] sheepistNoir Possible Actions:", possibleActions);
     return { actions: possibleActions };
 }
 
@@ -505,10 +505,10 @@ export function computeChefPlan(chef, allEntities, mapGrid, cols, rows) {
     const allies = allEntities.filter(e => e.id !== 'player' && e.id !== chef.id && e.hp > 0); 
     const blockers = allEntities.filter(e => e !== chef && e.hp > 0);
 
-    console.log(`[AI DEBUG] computeChefPlan started for ${chef.id}. AP=${chef.ap}, MP=${chef.mp}`);
-    console.log(`[AI DEBUG] Player pos: (${player?.gridX}, ${player?.gridY}), Chef pos: (${chef.gridX}, ${chef.gridY})`);
-    console.log(`[AI DEBUG] Blockers:`, blockers.map(b => `${b.id} at (${b.gridX}, ${b.gridY})`));
-    console.log(`[AI DEBUG] Allies:`, allies.map(a => `${a.id} at (${a.gridX}, ${a.gridY})`));
+    // console.log(`[AI DEBUG] computeChefPlan started for ${chef.id}. AP=${chef.ap}, MP=${chef.mp}`);
+    // console.log(`[AI DEBUG] Player pos: (${player?.gridX}, ${player?.gridY}), Chef pos: (${chef.gridX}, ${chef.gridY})`);
+    // console.log(`[AI DEBUG] Blockers:`, blockers.map(b => `${b.id} at (${b.gridX}, ${b.gridY})`));
+    // console.log(`[AI DEBUG] Allies:`, allies.map(a => `${a.id} at (${a.gridX}, ${a.gridY})`));
 
     const isValid = (x, y, currentEntity) => {
         // Pass mapGrid, cols, rows to validation function
@@ -529,15 +529,15 @@ export function computeChefPlan(chef, allEntities, mapGrid, cols, rows) {
     const SPECIAL_RANGE = 4;
     const SPECIAL_COST_AP = 2;
     if (chef.ap >= SPECIAL_COST_AP && !chef.usedSpecialThisTurn) { // Check usage flag
-        console.log(`[AI DEBUG] Checking Direct Special. Chef AP=${chef.ap}, UsedSpecial=${chef.usedSpecialThisTurn}`);
-        console.log(`[AI DEBUG] Allies found: ${allies.length}`);
+        // console.log(`[AI DEBUG] Checking Direct Special. Chef AP=${chef.ap}, UsedSpecial=${chef.usedSpecialThisTurn}`);
+        // console.log(`[AI DEBUG] Allies found: ${allies.length}`);
         for (const ally of allies) {
-             console.log(`[AI DEBUG] Checking ally ${ally.id} for direct special: MP=${ally.mp}, MaxMP=${ally.maxMp}`);
+             // console.log(`[AI DEBUG] Checking ally ${ally.id} for direct special: MP=${ally.mp}, MaxMP=${ally.maxMp}`);
              const dist = Math.abs(chef.gridX - ally.gridX) + Math.abs(chef.gridY - ally.gridY);
              const hasLOS = hasLineOfSight(chef.gridX, chef.gridY, ally.gridX, ally.gridY, blockers, mapGrid);
-             console.log(`[AI DEBUG] Ally ${ally.id}: Dist=${dist}, Range=${SPECIAL_RANGE}, HasLOS=${hasLOS}`);
+             // console.log(`[AI DEBUG] Ally ${ally.id}: Dist=${dist}, Range=${SPECIAL_RANGE}, HasLOS=${hasLOS}`);
              if (dist <= SPECIAL_RANGE && hasLOS) {
-                 console.log(`[AI DEBUG] Found ally ${ally.id} in range. Adding 'special' action.`);
+                 // console.log(`[AI DEBUG] Found ally ${ally.id} in range. Adding 'special' action.`);
                  actions.push({ type: 'special', target: ally, cost: { ap: SPECIAL_COST_AP } });
              }
         }
@@ -546,7 +546,7 @@ export function computeChefPlan(chef, allEntities, mapGrid, cols, rows) {
     // 3. Move then Attack player
     if (chef.ap >= 2 && player) {
         const path = findPath(chef.gridX, chef.gridY, player.gridX, player.gridY, chef, isValid, blockers, mapGrid, cols, rows, true); // adjacent=true
-        console.log(`[AI DEBUG] Path for Move->Attack:`, path);
+        // console.log(`[AI DEBUG] Path for Move->Attack:`, path);
         if (path && path.length > 1) { // Path to adjacent exists
             const requiredMp = path.length - 1;
             const affordableMp = Math.min(requiredMp, chef.mp);
@@ -649,7 +649,7 @@ export function computeChefPlan(chef, allEntities, mapGrid, cols, rows) {
             }
         }
     }
-    console.log(`[AI DEBUG] computeChefPlan final actions:`, actions);
+    // console.log(`[AI DEBUG] computeChefPlan final actions:`, actions);
     return actions;
 }
 

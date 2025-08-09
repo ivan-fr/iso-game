@@ -246,7 +246,7 @@ export function findPath(startX, startY, endX, endY, entity, isTileValidAndFree,
     if (!adjacentToTarget) {
         // If the target tile itself is an obstacle, pathfinding is impossible.
         if (isTargetObstacle) {
-            console.warn(`[Pathfind] Target tile (${endX}, ${endY}) is an obstacle. Path impossible.`);
+            // console.warn(`[Pathfind] Target tile (${endX}, ${endY}) is an obstacle. Path impossible.`);
             return null; 
         }
         // If the target tile is invalid ONLY because it's occupied, pathfinding should still proceed.

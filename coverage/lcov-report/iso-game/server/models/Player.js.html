@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.9% </span>
+                <span class="strong">85.52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>73/84</span>
+                <span class='fraction'>65/76</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.69% </span>
+                <span class="strong">88.52% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>57/65</span>
+                <span class='fraction'>54/61</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.9% </span>
+                <span class="strong">85.52% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>73/84</span>
+                <span class='fraction'>65/76</span>
             </div>
         
             
@@ -393,7 +393,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -413,7 +413,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -430,11 +430,11 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -448,14 +448,14 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -487,20 +487,20 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -670,7 +670,7 @@ export class Player {
 <span class="cstat-no" title="statement not covered" >                throw new PlayerError('Failed to save new player to database', { playerId: player.id });</span>
             }
             
-            console.log(`[Player] Created new player: ${player.id} (${player.name})`);
+            // console.log(`[Player] Created new player: ${player.id} (${player.name})`);
             return player;
         } catch (error) {
 <span class="cstat-no" title="statement not covered" >            ErrorLogger.log(new PlayerError(`Failed to create player: ${error.message}`, { playerData, error: error.message }));</span>
@@ -690,7 +690,7 @@ export class Player {
             }
             
             const player = new Player(data);
-            console.log(`[Player] Loaded player: ${player.id} (${player.name})`);
+            // console.log(`[Player] Loaded player: ${player.id} (${player.name})`);
             return player;
         } catch (error) {
 <span class="cstat-no" title="statement not covered" >            ErrorLogger.log(new PlayerError(`Failed to load player: ${error.message}`, { playerId, error: error.message }));</span>
@@ -707,9 +707,9 @@ export class Player {
             const data = this.toJSON();
             const saved = await redisManager.savePlayerData(this.id, data);
             
-            if (saved) {
-                console.log(`[Player] Saved player data: ${this.id}`);
-            }
+            // if (saved) {
+            //     console.log(`[Player] Saved player data: ${this.id}`);
+            // }
             
             return saved;
         } catch (error) {
@@ -725,14 +725,14 @@ export class Player {
         this.socketId = socketId;
         this.connectedAt = Date.now();
         this.lastSeen = Date.now();
-        console.log(`[Player] Player ${this.id} connected with socket ${socketId}`);
+        // console.log(`[Player] Player ${this.id} connected with socket ${socketId}`);
     }
 &nbsp;
     /**
      * Handles player disconnection
      */
     disconnect() {
-        console.log(`[Player] Player ${this.id} disconnected`);
+        // console.log(`[Player] Player ${this.id} disconnected`);
         this.socketId = null;
         this.connectedAt = null;
         this.lastSeen = Date.now();
@@ -764,7 +764,7 @@ export class Player {
         this.lobbyId = lobbyId;
         this.isHost = isHost;
         this.isReady = false;
-        console.log(`[Player] Player ${this.id} joined lobby ${lobbyId} as ${isHost ? 'host' : <span class="branch-1 cbranch-no" title="branch not covered" >'member'}</span>`);
+        // console.log(`[Player] Player ${this.id} joined lobby ${lobbyId} as ${isHost ? 'host' : 'member'}`);
     }
 &nbsp;
     /**
@@ -777,7 +777,7 @@ export class Player {
         this.isReady = false;
         
         <span class="missing-if-branch" title="else path not taken" >E</span>if (oldLobbyId) {
-            console.log(`[Player] Player ${this.id} left lobby ${oldLobbyId}`);
+            // console.log(`[Player] Player ${this.id} left lobby ${oldLobbyId}`);
         }
     }
 &nbsp;
@@ -901,7 +901,7 @@ export class Player {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-09T14:03:13.839Z
+                at 2025-08-09T14:38:16.723Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

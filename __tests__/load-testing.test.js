@@ -59,7 +59,12 @@ describe('Multiplayer Load Testing', () => {
         if (io) io.close();
         if (httpServer) {
             httpServer.close((err) => {
-                if (err) console.error('Error closing server:', err);
+                if (err) {
+                    // Ignore server not running error, as it's expected in some test cases
+                    if (err.code !== 'ERR_SERVER_NOT_RUNNING') {
+                        console.error('Error closing server:', err);
+                    }
+                }
                 done();
             });
         } else {

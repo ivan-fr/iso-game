@@ -475,7 +475,7 @@ export class AlertManager {
             try {
                 callback(alert);
             } catch (error) {
-                console.error('Error in alert callback:', error);
+                // console.error('Error in alert callback:', error);
             }
         }
     }

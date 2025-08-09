@@ -1313,7 +1313,7 @@ export function gameTick() {
         for (let i = scheduledActions.length - 1; i >= 0; i--) {
             const action = scheduledActions[i];
             if (now >= action.executionTime) {
-                console.log(`[Scheduler] Executing action: ${action.type}`);
+                // console.log(`[Scheduler] Executing action: ${action.type}`);
                 try {
                     switch (action.type) {
                         case 'applySpellEffect':
@@ -1321,7 +1321,7 @@ export function gameTick() {
                             break;
                         // Add other action types here if needed later
                         default:
-                            console.warn(`[Scheduler] Unknown action type: ${action.type}`);
+                            // console.warn(`[Scheduler] Unknown action type: ${action.type}`);
                     }
                 } catch (error) {
                     console.error(`[Scheduler] Error executing action ${action.type}:`, error, action.data);

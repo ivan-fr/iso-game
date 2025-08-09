@@ -205,7 +205,7 @@ export function updateCameraOffset(canvasWidth, canvasHeight, currentGridCols, c
     // Adjust vertical offset slightly to show more ground below the center
     cameraOffsetY = canvasHeight / 2 - centerScreenY_noOffset + TILE_H * 1.5;
 
-    console.log(`Camera Offset updated: X=${cameraOffsetX.toFixed(1)}, Y=${cameraOffsetY.toFixed(1)}`);
+    // console.log(`Camera Offset updated: X=${cameraOffsetX.toFixed(1)}, Y=${cameraOffsetY.toFixed(1)}`);
 }
 
 /**

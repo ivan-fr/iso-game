@@ -23,7 +23,7 @@ describe('MultiplayerInventory Model', () => {
         jest.clearAllMocks();
         mockRedisManager.savePlayerInventory.mockResolvedValue(true);
         mockRedisManager.getPlayerInventory.mockResolvedValue(null);
-        mockRedisManager.isConnected.mockReturnValue(true);
+        mockRedisManager.isConnected.mockReturnValue(false); // Default to not connected
     });
 
     describe('Inventory Creation', () => {
@@ -181,6 +181,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should craft item successfully', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             const result = await inventory.craftItem('craft_coiffe_sheep');
             
             expect(result.success).toBe(true);
@@ -223,6 +224,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should equip item successfully', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             const result = await inventory.equipItem('coiffe_sheep');
             
             expect(result.success).toBe(true);
@@ -232,6 +234,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should replace equipped item', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             // Equip first item
             await inventory.equipItem('coiffe_sheep');
             expect(inventory.equipment.head).toBe('coiffe_sheep');
@@ -261,6 +264,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should unequip item successfully', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             // First equip an item
             await inventory.equipItem('coiffe_sheep');
             expect(inventory.equipment.head).toBe('coiffe_sheep');
@@ -300,6 +304,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should calculate drops from defeated enemies', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             // Mock random to always succeed
             const originalRandom = Math.random;
             Math.random = jest.fn(() => 0.1); // Always less than drop chances
@@ -362,6 +367,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should load inventory from Redis', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             // Test new inventory creation when no data exists
             const inventory = await MultiplayerInventory.load('player-1');
             
@@ -374,6 +380,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should create new inventory for new player', async () => {
+            mockRedisManager.isConnected.mockReturnValue(true);
             const inventory = await MultiplayerInventory.load('new-player');
             
             expect(inventory).toBeDefined();

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75.42% </span>
+                <span class="strong">74.56% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>89/118</span>
+                <span class='fraction'>85/114</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">85.29% </span>
+                <span class="strong">86.11% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>29/34</span>
+                <span class='fraction'>31/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">88.88% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>16/18</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75.42% </span>
+                <span class="strong">74.56% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>89/118</span>
+                <span class='fraction'>85/114</span>
             </div>
         
             
@@ -302,11 +302,7 @@
 <a name='L237'></a><a href='#L237'>237</a>
 <a name='L238'></a><a href='#L238'>238</a>
 <a name='L239'></a><a href='#L239'>239</a>
-<a name='L240'></a><a href='#L240'>240</a>
-<a name='L241'></a><a href='#L241'>241</a>
-<a name='L242'></a><a href='#L242'>242</a>
-<a name='L243'></a><a href='#L243'>243</a>
-<a name='L244'></a><a href='#L244'>244</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L240'></a><a href='#L240'>240</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -314,8 +310,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -330,12 +325,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -348,7 +341,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -556,9 +548,8 @@ import { createClient } from 'redis';
 import { ErrorLogger, GameError } from './errors.js';
 &nbsp;
 class RedisManager {
-    constructor() {
-        this.client = null;
-        this.isConnected = false;
+    isConnected() {
+        return this.client &amp;&amp; this.client.isOpen;
     }
 &nbsp;
     async connect() {
@@ -572,14 +563,12 @@ class RedisManager {
 <span class="cstat-no" title="statement not covered" >                ErrorLogger.log(new GameError(`Redis Client Error: ${err.message}`, 'REDIS_ERROR', { error: err.message }));</span>
             });
 &nbsp;
-            this.client.on('connect', () =&gt; {
-                console.log('[Redis] Connected to Redis server');
-                this.isConnected = true;
+            this.client.on('connect', <span class="fstat-no" title="function not covered" >()</span> =&gt; {
+<span class="cstat-no" title="statement not covered" >                console.log('[Redis] Connected to Redis server');</span>
             });
 &nbsp;
             this.client.on('disconnect', <span class="fstat-no" title="function not covered" >()</span> =&gt; {
 <span class="cstat-no" title="statement not covered" >                console.warn('[Redis] Disconnected from Redis server');</span>
-<span class="cstat-no" title="statement not covered" >                this.isConnected = false;</span>
             });
 &nbsp;
             await this.client.connect();
@@ -591,9 +580,8 @@ class RedisManager {
     }
 &nbsp;
     async disconnect() {
-        <span class="missing-if-branch" title="else path not taken" >E</span>if (this.client &amp;&amp; this.isConnected) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (this.client &amp;&amp; this.client.isOpen) {
             await this.client.disconnect();
-            this.isConnected = false;
         }
     }
 &nbsp;
@@ -649,7 +637,7 @@ class RedisManager {
 &nbsp;
     // Inventory-specific operations
     async savePlayerInventory(playerId, inventory) {
-        <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isConnected) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isConnected()) {
             const error = <span class="cstat-no" title="statement not covered" >new GameError('Redis is not connected. Cannot save inventory.', 'REDIS_NOT_CONNECTED');</span>
 <span class="cstat-no" title="statement not covered" >            ErrorLogger.log(error);</span>
 <span class="cstat-no" title="statement not covered" >            return false;</span>
@@ -666,7 +654,7 @@ class RedisManager {
     }
 &nbsp;
     async getPlayerInventory(playerId) {
-        <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isConnected) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isConnected()) {
             const error = <span class="cstat-no" title="statement not covered" >new GameError('Redis is not connected. Cannot get inventory.', 'REDIS_NOT_CONNECTED');</span>
 <span class="cstat-no" title="statement not covered" >            ErrorLogger.log(error);</span>
 <span class="cstat-no" title="statement not covered" >            return null;</span>
@@ -799,7 +787,7 @@ export default redisManager;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-09T14:03:13.839Z
+                at 2025-08-09T14:38:16.723Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

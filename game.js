@@ -115,7 +115,8 @@ function updateAllUIWrapper() {
         playerState: gameState.playerState,
         endTurnButton: document.getElementById('end-turn-button'),
         mobileEndTurnButton: document.getElementById('mobile-end-turn-button'),
-        gameOver: gameState.gameOver
+        gameOver: gameState.gameOver,
+        isInLobby: isInLobby() // Pass lobby mode
     });
 }
 
@@ -908,6 +909,25 @@ function moveEntityToLobby(entity, targetGridX, targetGridY) {
         updateAllUIWrapper();
     });
 }
+
+// Handle updates from other players (multiplayer)
+window.updatePlayerPosition = function(playerId, position) {
+    console.log(`[MULTIPLAYER] Player ${playerId} moved to (${position.gridX}, ${position.gridY})`);
+    // For now, we'll store other players' positions for rendering
+    // This will be expanded when we add proper multiplayer rendering
+    if (!window.otherPlayers) window.otherPlayers = new Map();
+    window.otherPlayers.set(playerId, {
+        playerId,
+        gridX: position.gridX,
+        gridY: position.gridY
+    });
+};
+
+window.handlePlayerAction = function(data) {
+    console.log(`[MULTIPLAYER] Player ${data.playerId} performed action: ${data.action}`);
+    // Handle other player actions (attacks, spells, etc.)
+    // This will be expanded for full multiplayer support
+};
 
 // Send player position update to multiplayer server
 function sendPlayerPositionUpdate(gridX, gridY) {

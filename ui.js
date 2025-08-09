@@ -63,8 +63,56 @@ export function updateUI(
     player, bossState, // Use dynamic boss state
     enemiesState, enemyCountDisplay, enemyTotalDisplay, enemyHpSummaryDisplay, // Use generic enemy state/displays
     playerHealthBar, bossHealthBar,
-    currentTurn, isMoving, activeEnemy, playerState, endTurnButton, mobileEndTurnButton, gameOver // Use activeEnemy, add mobileEndTurnButton
+    currentTurn, isMoving, activeEnemy, playerState, endTurnButton, mobileEndTurnButton, gameOver, // Use activeEnemy, add mobileEndTurnButton
+    isInLobby = false // Add lobby mode parameter
 ) {
+    // In lobby mode, hide turn-based UI elements
+    if (isInLobby) {
+        // Hide combat-related UI
+        const combatElements = [
+            'boss-info-group',
+            'enemy-info',
+            'turnOrder',
+            'spell-bar',
+            'end-turn-button',
+            'mobile-end-turn-button'
+        ];
+        
+        combatElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.style.display = 'none';
+        });
+        
+        // Show lobby-specific message
+        const messageBox = document.getElementById('messageBox');
+        if (messageBox && messageBox.textContent.trim() === '') {
+            showMessage('Welcome to the lobby! Move freely and explore the portals.', 4000);
+        }
+        
+        // Update player stats without AP/MP restrictions
+        playerApDisplay.textContent = '∞';
+        playerMpDisplay.textContent = '∞';
+        updateHealthBar(playerHealthBar, player.hp, player.maxHp);
+        return;
+    }
+    
+    // Show combat UI elements when not in lobby
+    const combatElements = [
+        'boss-info-group',
+        'enemy-info', 
+        'turnOrder',
+        'spell-bar',
+        'end-turn-button',
+        'mobile-end-turn-button'
+    ];
+    
+    combatElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element && (id === 'boss-info-group' ? bossState : true)) {
+            element.style.display = bossState || id !== 'boss-info-group' ? 'block' : 'none';
+        }
+    });
+
     playerApDisplay.textContent = player.ap;
     playerMpDisplay.textContent = player.mp;
     updateHealthBar(playerHealthBar, player.hp, player.maxHp);
@@ -197,20 +245,23 @@ export function updateAllUI({
     playerState,
     endTurnButton,
     mobileEndTurnButton, // Add mobileEndTurnButton
-    gameOver
+    gameOver,
+    isInLobby = false // Add lobby mode parameter
 }) {
-    // Call updateUI with all params
+    // Call updateUI with all params including lobby mode
     updateUI(
         playerApDisplay, playerMpDisplay, bossApDisplay, bossMpDisplay,
         player, boss, // Pass bossState here
         enemiesState, enemyCountDisplay, enemyTotalDisplay, enemyHpSummaryDisplay,
         playerHealthBar, bossHealthBar,
-        currentTurn, isMoving, activeEnemy, playerState, endTurnButton, mobileEndTurnButton, gameOver
+        currentTurn, isMoving, activeEnemy, playerState, endTurnButton, mobileEndTurnButton, gameOver,
+        isInLobby // Pass lobby mode to updateUI
     );
     // Cursor feedback
     const canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     if (gameOver) canvas.style.cursor = 'default';
+    else if (isInLobby) canvas.style.cursor = 'pointer'; // Always pointer in lobby for free movement
     // else if (currentTurn !== 'player' || isBossActing) canvas.style.cursor = 'default';
     else if (currentTurn !== 'player' || activeEnemy) canvas.style.cursor = 'default'; // Use activeEnemy
     else if (playerState === 'aiming') canvas.style.cursor = 'crosshair';

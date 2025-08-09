@@ -409,9 +409,26 @@ io.on('connection', (socket) => {
             const player = connectedPlayers.get(socket.id);
             if (!player) return;
 
-            const { action, target, position } = data;
+            const { type, action, target, position, roomId } = data;
 
-            // Broadcast action to other players in the same lobby
+            // Handle movement actions specifically
+            if (type === 'move' && position) {
+                player.updatePosition(position.gridX, position.gridY);
+                
+                // Broadcast movement to other players in the same lobby
+                if (player.isInLobby()) {
+                    socket.to(`lobby:${player.lobbyId}`).emit('game:player_moved', {
+                        playerId: player.id,
+                        position: { gridX: position.gridX, gridY: position.gridY },
+                        roomId
+                    });
+                }
+                
+                console.log(`[Server] Player ${player.name} moved to (${position.gridX}, ${position.gridY}) in room ${roomId}`);
+                return;
+            }
+
+            // Handle other actions (attacks, spells, etc.)
             if (player.isInLobby()) {
                 socket.to(`lobby:${player.lobbyId}`).emit('game:player_action', {
                     playerId: player.id,

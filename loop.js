@@ -112,7 +112,7 @@ export function startGameLoop() {
 
         // Get current entities to draw
         PerformanceUtils.startTimer('entityMapping');
-        const currentEntities = [
+        let currentEntities = [
             { entity: player, image: window.loadedImages.player, loaded: window.loadedImageStatus.player },
              ...(bossState ? [{ entity: bossState, image: window.loadedImages.boss, loaded: window.loadedImageStatus.boss }] : []),
             ...enemiesState.map(e => ({
@@ -121,6 +121,23 @@ export function startGameLoop() {
                  loaded: window.loadedImageStatus[e.aiType] ?? false
              }))
          ].filter(item => !!item.entity); // Keep only entities that exist, DO NOT filter by hp > 0
+        
+        // Add other players in lobby mode
+        if (currentRoomId === -1 && window.otherPlayers) {
+            const otherPlayersArray = Array.from(window.otherPlayers.values()).map(otherPlayer => ({
+                entity: {
+                    id: otherPlayer.playerId,
+                    gridX: otherPlayer.gridX,
+                    gridY: otherPlayer.gridY,
+                    hp: 100, // Assume other players are alive
+                    isOtherPlayer: true
+                },
+                image: window.loadedImages.player, // Use same player image
+                loaded: window.loadedImageStatus.player
+            }));
+            currentEntities = [...currentEntities, ...otherPlayersArray];
+        }
+        
         PerformanceUtils.endTimer('entityMapping');
 
         // Call drawGrid with current state

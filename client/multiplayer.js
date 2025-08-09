@@ -292,6 +292,12 @@ class MultiplayerClient {
             position
         });
     }
+    
+    sendGameAction(actionData) {
+        if (!this.isConnected) return;
+
+        this.socket.emit('game:action', actionData);
+    }
 
     /**
      * Inventory management
@@ -508,6 +514,12 @@ class MultiplayerClient {
         const player = this.otherPlayers.get(playerId);
         if (player) {
             player.position = position;
+        } else {
+            // Create new player entry if doesn't exist
+            this.otherPlayers.set(playerId, {
+                playerId,
+                position
+            });
         }
         
         // Update game visuals

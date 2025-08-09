@@ -1086,6 +1086,17 @@ export function drawEntity(ctx, entity, entityImage, imageLoaded, TILE_W, TILE_H
     // --- Determine Final Alpha and Scale (prioritize death anim) ---
     let finalAlpha = alpha; // Start with base alpha
     let finalScale = 1.0; // Start with base scale
+    
+    // Special rendering for other players in multiplayer
+    if (entity.isOtherPlayer) {
+        finalAlpha = 0.8; // Make other players slightly transparent
+        // Add a colored outline to distinguish them
+        ctx.strokeStyle = '#00ff00'; // Green outline for other players
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY - TILE_H / 2, TILE_W / 2 + 5, 0, Math.PI * 2);
+        ctx.stroke();
+    }
 
     if (entity._isDying && typeof entity._deathAlpha === 'number') {
         finalAlpha = entity._deathAlpha; // Override alpha if dying
@@ -1175,6 +1186,46 @@ export function drawEntity(ctx, entity, entityImage, imageLoaded, TILE_W, TILE_H
     // Restore shadow settings if applied
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
+    
+    // --- PLAYER NAME LABEL (for other players in multiplayer) ---
+    if (entity.isOtherPlayer) {
+        const playerName = entity.id || 'Other Player';
+        const nameFontSize = Math.max(10, TILE_W * 0.15);
+        ctx.font = `bold ${nameFontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        const nameMetrics = ctx.measureText(playerName);
+        const nameWidth = nameMetrics.width;
+        const nameHeight = nameFontSize;
+        const namePadding = 2;
+
+        // Position above entity
+        let entityTopY = screenY - TILE_H / 4;
+        if (imageLoaded && entityImage) {
+            const sizeRatio = (entity.size || 28) / 28;
+            const imgWidth = TILE_W * 0.9 * sizeRatio; 
+            const aspectRatio = entityImage.naturalHeight / entityImage.naturalWidth;
+            const imgHeight = imgWidth * aspectRatio;
+            entityTopY = screenY - imgHeight + TILE_H / 4;
+        }
+
+        const nameTextY = entityTopY - 25; // Above the entity
+        const nameTextX = screenX;
+
+        // Draw background
+        ctx.fillStyle = 'rgba(0, 128, 0, 0.8)'; // Green background for other players
+        ctx.fillRect(
+            nameTextX - nameWidth / 2 - namePadding,
+            nameTextY - nameHeight - namePadding,
+            nameWidth + namePadding * 2,
+            nameHeight + namePadding * 2
+        );
+
+        // Draw name text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(playerName, nameTextX, nameTextY);
+    }
 
     // --- Draw HP/AP/MP Display (if hovered and alive) ---
     if (isHovered && entity.hp > 0 && typeof entity.maxHp === 'number' && finalAlpha === 1) {

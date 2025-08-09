@@ -2,27 +2,35 @@
  * Tests for Player model
  */
 import { jest } from '@jest/globals';
+
+// Import the Player model
 import { Player } from '../../models/Player.js';
+
+// Import and mock the Redis manager after importing Player
 import redisManager from '../../utils/redis.js';
 
-// Mock Redis manager
-const mockRedisManager = {
-    savePlayerData: jest.fn(),
-    getPlayerData: jest.fn(),
-    connect: jest.fn().mockResolvedValue(true),
-    disconnect: jest.fn(),
-    isConnected: true
-};
+// Mock all the RedisManager methods
+const originalSavePlayerData = redisManager.savePlayerData;
+const originalGetPlayerData = redisManager.getPlayerData;
 
-jest.mock('../../utils/redis.js', () => ({
-    default: mockRedisManager
-}));
+beforeAll(() => {
+    // Mock the Redis manager methods
+    redisManager.savePlayerData = jest.fn();
+    redisManager.getPlayerData = jest.fn();
+    redisManager.isConnected = true;
+});
+
+afterAll(() => {
+    // Restore original methods
+    redisManager.savePlayerData = originalSavePlayerData;
+    redisManager.getPlayerData = originalGetPlayerData;
+});
 
 describe('Player Model', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        mockRedisManager.savePlayerData.mockResolvedValue(true);
-        mockRedisManager.getPlayerData.mockResolvedValue(null);
+        redisManager.savePlayerData.mockResolvedValue(true);
+        redisManager.getPlayerData.mockResolvedValue(null);
     });
 
     describe('Player Creation', () => {
@@ -147,17 +155,17 @@ describe('Player Model', () => {
 
     describe('Player Persistence', () => {
         test('should save player data to Redis', async () => {
-            mockRedisManager.savePlayerData.mockResolvedValue(true);
+            redisManager.savePlayerData.mockResolvedValue(true);
 
             const player = new Player({ id: 'test-player', name: 'TestPlayer' });
             const result = await player.save();
             
             expect(result).toBe(true);
-            expect(mockRedisManager.savePlayerData).toHaveBeenCalledWith('test-player', expect.any(Object));
+            expect(redisManager.savePlayerData).toHaveBeenCalledWith('test-player', expect.any(Object));
         });
 
         test('should handle save failures', async () => {
-            mockRedisManager.savePlayerData.mockResolvedValue(false);            const player = new Player({ id: 'test-player', name: 'TestPlayer' });
+            redisManager.savePlayerData.mockResolvedValue(false);            const player = new Player({ id: 'test-player', name: 'TestPlayer' });
             const result = await player.save();
 
             expect(result).toBe(false);
@@ -172,7 +180,7 @@ describe('Player Model', () => {
                 createdAt: Date.now()
             };
 
-            mockRedisManager.getPlayerData.mockResolvedValue(playerData);
+            redisManager.getPlayerData.mockResolvedValue(playerData);
 
             const player = await Player.load('test-player');
             
@@ -183,14 +191,14 @@ describe('Player Model', () => {
         });
 
         test('should return null for non-existent player', async () => {
-            mockRedisManager.getPlayerData.mockResolvedValue(null);
+            redisManager.getPlayerData.mockResolvedValue(null);
 
             const player = await Player.load('non-existent-player');
             expect(player).toBeNull();
         });
 
         test('should create new player with static create method', async () => {
-            mockRedisManager.savePlayerData.mockResolvedValue(true);
+            redisManager.savePlayerData.mockResolvedValue(true);
 
             const playerData = { name: 'NewPlayer' };
             const player = await Player.create(playerData);
@@ -198,7 +206,7 @@ describe('Player Model', () => {
             expect(player).toBeDefined();
             expect(player.name).toBe('NewPlayer');
             expect(player.id).toBeDefined();
-            expect(mockRedisManager.savePlayerData).toHaveBeenCalled();
+            expect(redisManager.savePlayerData).toHaveBeenCalled();
         });
     });
 

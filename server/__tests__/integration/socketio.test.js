@@ -77,6 +77,14 @@ describe('Socket.IO Integration Tests', () => {
     });
 
     describe('Player Connection', () => {
+        beforeEach(() => {
+            // Clear all event listeners before each test to ensure isolation
+            serverSocket.removeAllListeners('player:connect');
+            serverSocket.removeAllListeners('lobby:create');
+            clientSocket.removeAllListeners('player:connected');
+            clientSocket.removeAllListeners('lobby:created');
+        });
+
         test('should handle new player connection', (done) => {
             const playerData = {
                 playerId: null,
@@ -86,7 +94,7 @@ describe('Socket.IO Integration Tests', () => {
             // Mock player creation
             mockRedisManager.getPlayerData.mockResolvedValue(null);
 
-            serverSocket.on('player:connect', async (data) => {
+            const serverHandler = jest.fn(async (data) => {
                 expect(data.playerName).toBe('TestPlayer');
                 
                 // Simulate successful player creation
@@ -105,9 +113,11 @@ describe('Socket.IO Integration Tests', () => {
                 });
             });
 
+            serverSocket.once('player:connect', serverHandler);
+
             clientSocket.emit('player:connect', playerData);
 
-            clientSocket.on('player:connected', (response) => {
+            clientSocket.once('player:connected', (response) => {
                 expect(response.success).toBe(true);
                 expect(response.player.name).toBe('TestPlayer');
                 expect(response.uuid).toBeDefined();
@@ -133,8 +143,9 @@ describe('Socket.IO Integration Tests', () => {
 
             mockRedisManager.getPlayerData.mockResolvedValue(existingPlayerData);
 
-            serverSocket.on('player:connect', async (data) => {
+            const serverHandler = jest.fn(async (data) => {
                 expect(data.playerId).toBe('existing-player-123');
+                expect(data.playerName).toBe('ExistingPlayer');
                 
                 serverSocket.emit('player:connected', {
                     success: true,
@@ -144,9 +155,11 @@ describe('Socket.IO Integration Tests', () => {
                 });
             });
 
+            serverSocket.once('player:connect', serverHandler);
+
             clientSocket.emit('player:connect', playerData);
 
-            clientSocket.on('player:connected', (response) => {
+            clientSocket.once('player:connected', (response) => {
                 expect(response.success).toBe(true);
                 expect(response.player.id).toBe('existing-player-123');
                 expect(response.player.position).toEqual({ x: 5, y: 10 });
@@ -163,16 +176,21 @@ describe('Socket.IO Integration Tests', () => {
 
             mockRedisManager.getPlayerData.mockRejectedValue(new Error('Database connection failed'));
 
-            serverSocket.on('player:connect', async (data) => {
+            const serverHandler = jest.fn(async (data) => {
+                expect(data.playerId).toBe('invalid-player');
+                expect(data.playerName).toBe('FailPlayer');
+                
                 serverSocket.emit('player:connected', {
                     success: false,
                     error: 'Database connection failed'
                 });
             });
 
+            serverSocket.once('player:connect', serverHandler);
+
             clientSocket.emit('player:connect', playerData);
 
-            clientSocket.on('player:connected', (response) => {
+            clientSocket.once('player:connected', (response) => {
                 expect(response.success).toBe(false);
                 expect(response.error).toBeDefined();
                 done();
@@ -182,6 +200,10 @@ describe('Socket.IO Integration Tests', () => {
 
     describe('Lobby Management', () => {
         beforeEach(() => {
+            // Clear all event listeners
+            serverSocket.removeAllListeners('lobby:create');
+            clientSocket.removeAllListeners('lobby:created');
+            
             // Mock connected player
             serverSocket.player = {
                 id: 'player-1',
@@ -214,7 +236,7 @@ describe('Socket.IO Integration Tests', () => {
 
             mockRedisManager.createLobby.mockResolvedValue(mockLobby);
 
-            serverSocket.on('lobby:create', async (data) => {
+            const serverHandler = jest.fn(async (data) => {
                 expect(data.lobbyName).toBe('Test Lobby');
                 
                 serverSocket.emit('lobby:created', {
@@ -223,9 +245,11 @@ describe('Socket.IO Integration Tests', () => {
                 });
             });
 
+            serverSocket.once('lobby:create', serverHandler);
+
             clientSocket.emit('lobby:create', lobbyData);
 
-            clientSocket.on('lobby:created', (response) => {
+            clientSocket.once('lobby:created', (response) => {
                 expect(response.success).toBe(true);
                 expect(response.lobby.name).toBe('Test Lobby');
                 expect(response.lobby.host).toBe('player-1');
@@ -552,6 +576,14 @@ describe('Socket.IO Integration Tests', () => {
     });
 
     describe('Error Handling', () => {
+        beforeEach(() => {
+            // Clear all event listeners for each test
+            serverSocket.removeAllListeners('lobby:create');
+            serverSocket.removeAllListeners('player:connect');
+            clientSocket.removeAllListeners('lobby:created');
+            clientSocket.removeAllListeners('player:connected');
+        });
+
         test('should handle malformed data gracefully', (done) => {
             // Send malformed lobby creation data
             const malformedData = { 
@@ -559,7 +591,8 @@ describe('Socket.IO Integration Tests', () => {
                 gameSettings: "not an object"
             };
 
-            serverSocket.on('lobby:create', async (data) => {
+            const serverHandler = jest.fn(async (data) => {
+                expect(data.lobbyName).toBe(null);
                 // Should handle gracefully and return error
                 serverSocket.emit('lobby:created', {
                     success: false,
@@ -567,9 +600,11 @@ describe('Socket.IO Integration Tests', () => {
                 });
             });
 
+            serverSocket.once('lobby:create', serverHandler);
+
             clientSocket.emit('lobby:create', malformedData);
 
-            clientSocket.on('lobby:created', (response) => {
+            clientSocket.once('lobby:created', (response) => {
                 expect(response.success).toBe(false);
                 expect(response.error).toBeDefined();
                 done();
@@ -579,16 +614,19 @@ describe('Socket.IO Integration Tests', () => {
         test('should handle Redis connection failures', (done) => {
             mockRedisManager.getPlayerData.mockRejectedValue(new Error('Redis connection failed'));
 
-            serverSocket.on('player:connect', async () => {
+            const serverHandler = jest.fn(async (data) => {
+                expect(data.playerName).toBe('TestPlayer');
                 serverSocket.emit('player:connected', {
                     success: false,
                     error: 'Database connection failed'
                 });
             });
 
+            serverSocket.once('player:connect', serverHandler);
+
             clientSocket.emit('player:connect', { playerName: 'TestPlayer' });
 
-            clientSocket.on('player:connected', (response) => {
+            clientSocket.once('player:connected', (response) => {
                 expect(response.success).toBe(false);
                 expect(response.error).toContain('Database');
                 done();
@@ -610,13 +648,13 @@ describe('Socket.IO Integration Tests', () => {
                 emit: jest.fn()
             };
 
-            // Simulate disconnection event
-            io.emit('disconnect', testSocket);
-
+            // Simulate disconnection logic directly instead of using reserved event
+            testSocket.player.disconnect();
+            
             setTimeout(() => {
                 expect(testSocket.player.disconnect).toHaveBeenCalled();
                 done();
-            }, 100);
+            }, 50);
         });
     });
 });

@@ -195,8 +195,8 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should fail crafting with insufficient resources', async () => {
-            // Remove most resources
-            inventory.resources = { laine_sheep: 10 };
+            // Remove most resources - provide enough laine_sheep but not laine_sheepist_noir
+            inventory.resources = { laine_sheep: 60, laine_sheepist_noir: 10 };
 
             const result = await inventory.craftItem('craft_coiffe_sheep');
             
@@ -246,7 +246,7 @@ describe('MultiplayerInventory Model', () => {
             await inventory.equipItem('coiffe_sheep_royale');
             expect(inventory.equipment.head).toBe('coiffe_sheep_royale');
             expect(inventory.items.coiffe_sheep).toBe(2); // First item returned
-            expect(inventory.items.coiffe_sheep_royale).toBe(0); // Second item consumed
+            expect(inventory.items.coiffe_sheep_royale || 0).toBe(0); // Second item consumed (handle undefined)
         });
 
         test('should fail to equip item not in inventory', async () => {
@@ -361,7 +361,7 @@ describe('MultiplayerInventory Model', () => {
             const result = await inventory.save();
             
             expect(result).toBe(true);
-            expect(redisManager.savePlayerInventory).toHaveBeenCalledWith('player-1', expect.objectContaining({
+            expect(mockRedisManager.savePlayerInventory).toHaveBeenCalledWith('player-1', expect.objectContaining({
                 resources: expect.any(Object),
                 items: expect.any(Object),
                 equipment: expect.any(Object),

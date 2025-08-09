@@ -40,10 +40,11 @@
   "homepage": "https://github.com/ivan-fr/iso#readme",
   "description": "",
   "devDependencies": {
-    "jest": "^30.0.5",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "jest": "^30.0.5"
   },
   "dependencies": {
-    "socket.io-client": "^4.7.5"
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   }
 }

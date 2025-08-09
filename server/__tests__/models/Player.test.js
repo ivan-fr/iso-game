@@ -6,19 +6,23 @@ import { Player } from '../../models/Player.js';
 import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
+const mockRedisManager = {
+    savePlayerData: jest.fn(),
+    getPlayerData: jest.fn(),
+    connect: jest.fn().mockResolvedValue(true),
+    disconnect: jest.fn(),
+    isConnected: true
+};
+
 jest.mock('../../utils/redis.js', () => ({
-    default: {
-        savePlayerData: jest.fn(),
-        getPlayerData: jest.fn(),
-        connect: jest.fn().mockResolvedValue(true),
-        disconnect: jest.fn(),
-        isConnected: true
-    }
+    default: mockRedisManager
 }));
 
 describe('Player Model', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockRedisManager.savePlayerData.mockResolvedValue(true);
+        mockRedisManager.getPlayerData.mockResolvedValue(null);
     });
 
     describe('Player Creation', () => {
@@ -143,19 +147,17 @@ describe('Player Model', () => {
 
     describe('Player Persistence', () => {
         test('should save player data to Redis', async () => {
-            redisManager.savePlayerData.mockResolvedValue(true);
+            mockRedisManager.savePlayerData.mockResolvedValue(true);
 
             const player = new Player({ id: 'test-player', name: 'TestPlayer' });
             const result = await player.save();
-
+            
             expect(result).toBe(true);
-            expect(redisManager.savePlayerData).toHaveBeenCalledWith('test-player', expect.any(Object));
+            expect(mockRedisManager.savePlayerData).toHaveBeenCalledWith('test-player', expect.any(Object));
         });
 
         test('should handle save failures', async () => {
-            redisManager.savePlayerData.mockResolvedValue(false);
-
-            const player = new Player({ id: 'test-player', name: 'TestPlayer' });
+            mockRedisManager.savePlayerData.mockResolvedValue(false);            const player = new Player({ id: 'test-player', name: 'TestPlayer' });
             const result = await player.save();
 
             expect(result).toBe(false);
@@ -170,7 +172,7 @@ describe('Player Model', () => {
                 createdAt: Date.now()
             };
 
-            redisManager.getPlayerData.mockResolvedValue(playerData);
+            mockRedisManager.getPlayerData.mockResolvedValue(playerData);
 
             const player = await Player.load('test-player');
             
@@ -181,14 +183,14 @@ describe('Player Model', () => {
         });
 
         test('should return null for non-existent player', async () => {
-            redisManager.getPlayerData.mockResolvedValue(null);
+            mockRedisManager.getPlayerData.mockResolvedValue(null);
 
             const player = await Player.load('non-existent-player');
             expect(player).toBeNull();
         });
 
         test('should create new player with static create method', async () => {
-            redisManager.savePlayerData.mockResolvedValue(true);
+            mockRedisManager.savePlayerData.mockResolvedValue(true);
 
             const playerData = { name: 'NewPlayer' };
             const player = await Player.create(playerData);
@@ -196,7 +198,7 @@ describe('Player Model', () => {
             expect(player).toBeDefined();
             expect(player.name).toBe('NewPlayer');
             expect(player.id).toBeDefined();
-            expect(redisManager.savePlayerData).toHaveBeenCalled();
+            expect(mockRedisManager.savePlayerData).toHaveBeenCalled();
         });
     });
 

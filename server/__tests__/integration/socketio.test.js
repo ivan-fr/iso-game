@@ -8,7 +8,7 @@ import { io as Client } from 'socket.io-client';
 import redisManager from '../../utils/redis.js';
 
 // Mock Redis manager
-jest.mock('../../utils/redis.js', () => ({
+const mockRedisManager = {
     connect: jest.fn().mockResolvedValue(true),
     disconnect: jest.fn(),
     savePlayerData: jest.fn().mockResolvedValue(true),
@@ -21,7 +21,9 @@ jest.mock('../../utils/redis.js', () => ({
     deleteLobby: jest.fn().mockResolvedValue(true),
     getActiveLobbies: jest.fn().mockResolvedValue([]),
     isConnected: true
-}));
+};
+
+jest.mock('../../utils/redis.js', () => mockRedisManager);
 
 describe('Socket.IO Integration Tests', () => {
     let httpServer;
@@ -61,6 +63,17 @@ describe('Socket.IO Integration Tests', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        
+        // Reset all mock methods
+        mockRedisManager.getPlayerData.mockResolvedValue(null);
+        mockRedisManager.savePlayerData.mockResolvedValue(true);
+        mockRedisManager.getPlayerInventory.mockResolvedValue(null);
+        mockRedisManager.savePlayerInventory.mockResolvedValue(true);
+        mockRedisManager.createLobby.mockResolvedValue(null);
+        mockRedisManager.getLobby.mockResolvedValue(null);
+        mockRedisManager.updateLobby.mockResolvedValue(true);
+        mockRedisManager.deleteLobby.mockResolvedValue(true);
+        mockRedisManager.getActiveLobbies.mockResolvedValue([]);
     });
 
     describe('Player Connection', () => {
@@ -71,7 +84,7 @@ describe('Socket.IO Integration Tests', () => {
             };
 
             // Mock player creation
-            redisManager.getPlayerData.mockResolvedValue(null);
+            mockRedisManager.getPlayerData.mockResolvedValue(null);
 
             serverSocket.on('player:connect', async (data) => {
                 expect(data.playerName).toBe('TestPlayer');
@@ -118,7 +131,7 @@ describe('Socket.IO Integration Tests', () => {
                 lastSeen: Date.now() - 60000 // 1 minute ago
             };
 
-            redisManager.getPlayerData.mockResolvedValue(existingPlayerData);
+            mockRedisManager.getPlayerData.mockResolvedValue(existingPlayerData);
 
             serverSocket.on('player:connect', async (data) => {
                 expect(data.playerId).toBe('existing-player-123');
@@ -148,7 +161,7 @@ describe('Socket.IO Integration Tests', () => {
                 playerName: 'FailPlayer'
             };
 
-            redisManager.getPlayerData.mockRejectedValue(new Error('Database connection failed'));
+            mockRedisManager.getPlayerData.mockRejectedValue(new Error('Database connection failed'));
 
             serverSocket.on('player:connect', async (data) => {
                 serverSocket.emit('player:connected', {
@@ -199,7 +212,7 @@ describe('Socket.IO Integration Tests', () => {
                 maxPlayers: 4
             };
 
-            redisManager.createLobby.mockResolvedValue(mockLobby);
+            mockRedisManager.createLobby.mockResolvedValue(mockLobby);
 
             serverSocket.on('lobby:create', async (data) => {
                 expect(data.lobbyName).toBe('Test Lobby');
@@ -233,7 +246,7 @@ describe('Socket.IO Integration Tests', () => {
                 status: 'waiting'
             };
 
-            redisManager.getLobby.mockResolvedValue({
+            mockRedisManager.getLobby.mockResolvedValue({
                 ...mockLobby,
                 players: ['host-player'],
                 addPlayer: jest.fn().mockReturnValue(true),
@@ -271,7 +284,7 @@ describe('Socket.IO Integration Tests', () => {
                 save: jest.fn().mockResolvedValue(true)
             };
 
-            redisManager.getLobby.mockResolvedValue(mockLobby);
+            mockRedisManager.getLobby.mockResolvedValue(mockLobby);
 
             serverSocket.on('lobby:leave', async () => {
                 serverSocket.emit('lobby:left', {
@@ -326,7 +339,7 @@ describe('Socket.IO Integration Tests', () => {
                 startGame: jest.fn().mockResolvedValue('session-456')
             };
 
-            redisManager.getLobby.mockResolvedValue(mockLobby);
+            mockRedisManager.getLobby.mockResolvedValue(mockLobby);
 
             serverSocket.on('lobby:start_game', async () => {
                 serverSocket.emit('game:starting', {
@@ -367,7 +380,7 @@ describe('Socket.IO Integration Tests', () => {
                 }
             ];
 
-            redisManager.getActiveLobbies.mockResolvedValue(mockLobbies);
+            mockRedisManager.getActiveLobbies.mockResolvedValue(mockLobbies);
 
             serverSocket.on('lobby:list', async () => {
                 serverSocket.emit('lobby:list', {
@@ -471,7 +484,7 @@ describe('Socket.IO Integration Tests', () => {
                 version: 3
             };
 
-            redisManager.getPlayerInventory.mockResolvedValue(mockInventoryData);
+            mockRedisManager.getPlayerInventory.mockResolvedValue(mockInventoryData);
 
             serverSocket.on('inventory:sync', async () => {
                 serverSocket.emit('inventory:data', {
@@ -564,7 +577,7 @@ describe('Socket.IO Integration Tests', () => {
         });
 
         test('should handle Redis connection failures', (done) => {
-            redisManager.getPlayerData.mockRejectedValue(new Error('Redis connection failed'));
+            mockRedisManager.getPlayerData.mockRejectedValue(new Error('Redis connection failed'));
 
             serverSocket.on('player:connect', async () => {
                 serverSocket.emit('player:connected', {

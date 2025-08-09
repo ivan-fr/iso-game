@@ -3,7 +3,25 @@
   "name": "iso",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "collectCoverageFrom": [
+      "*.js",
+      "!script.js",
+      "!main.js"
+    ],
+    "transform": {},
+    "globals": {
+      "window": {}
+    }
   },
   "repository": {
     "type": "git",
@@ -16,5 +34,8 @@
     "url": "https://github.com/ivan-fr/iso/issues"
   },
   "homepage": "https://github.com/ivan-fr/iso#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "jest": "^30.0.5"
+  }
 }

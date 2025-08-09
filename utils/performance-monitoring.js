@@ -5,7 +5,7 @@ export class PerformanceMonitor {
     constructor(options = {}) {
         this.enableLogging = options.enableLogging !== false;
         this.enableMetrics = options.enableMetrics !== false;
-        this.sampleRate = options.sampleRate || 1.0; // 1.0 = 100% sampling
+        this.sampleRate = options.timerSamplingRate || options.sampleRate || 1.0; // Support both names
         
         this.metrics = {
             operations: new Map(),

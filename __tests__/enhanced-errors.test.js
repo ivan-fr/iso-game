@@ -233,9 +233,15 @@ describe('Enhanced Error Handling', () => {
         });
 
         test('should calculate exponential backoff delay', () => {
-            const delay0 = retryManager._calculateDelay(0);
-            const delay1 = retryManager._calculateDelay(1);
-            const delay2 = retryManager._calculateDelay(2);
+            // Create retry manager without jitter for predictable results
+            const retryManagerNoJitter = new RetryManager({
+                baseDelay: 10,
+                jitter: false
+            });
+            
+            const delay0 = retryManagerNoJitter._calculateDelay(0);
+            const delay1 = retryManagerNoJitter._calculateDelay(1);
+            const delay2 = retryManagerNoJitter._calculateDelay(2);
             
             expect(delay0).toBe(10); // baseDelay
             expect(delay1).toBe(20); // baseDelay * 2^1

@@ -253,7 +253,7 @@ export class RetryManager {
         this.baseDelay = options.baseDelay || 1000;
         this.maxDelay = options.maxDelay || 10000;
         this.backoffFactor = options.backoffFactor || 2;
-        this.jitter = options.jitter || true;
+        this.jitter = options.jitter !== false; // Default to true, only false if explicitly set
     }
 
     async execute(operation, options = {}) {

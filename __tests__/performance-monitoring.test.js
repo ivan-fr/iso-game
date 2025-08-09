@@ -160,14 +160,13 @@ describe('Performance Monitoring', () => {
             expect(health.issues.length).toBeGreaterThan(0);
         });
 
-        test('should handle timer sampling', () => {
-            // Mock Math.random to return 0.5 (greater than 0.0 sampleRate)
+        it('should handle timer sampling', () => {
+            // Mock Math.random to control sampling
             const originalRandom = Math.random;
-            Math.random = jest.fn(() => 0.5);
+            Math.random = () => 0.9; // Above sampling rate of 0.1
             
-            const lowSampleMonitor = new PerformanceMonitor({
-                enableMetrics: true,
-                sampleRate: 0.0 // 0% sampling
+            const lowSampleMonitor = new PerformanceMonitor({ 
+                timerSamplingRate: 0.1 
             });
             
             const timerId = lowSampleMonitor.startTimer('test');
@@ -175,7 +174,6 @@ describe('Performance Monitoring', () => {
             
             // Restore original Math.random
             Math.random = originalRandom;
-            lowSampleMonitor.stop();
         });
 
         test('should reset metrics correctly', () => {

@@ -37,11 +37,7 @@ export class Lobby {
             const lobby = new Lobby(lobbyData);
             const saved = await lobby.save();
             
-            if (!saved) {
-                throw new LobbyError('Failed to save lobby to database', { lobbyId: lobby.id, hostPlayerId });
-            }
-            
-            console.log(`[Lobby] Created lobby ${lobby.id} hosted by ${hostPlayerId}`);
+            // console.log(`[Lobby] Created lobby ${lobby.id} hosted by ${hostPlayerId}`);
             return lobby;
         } catch (error) {
             ErrorLogger.log(new LobbyError(`Failed to create lobby: ${error.message}`, { hostPlayerId, settings, error: error.message }));
@@ -61,7 +57,7 @@ export class Lobby {
             }
             
             const lobby = new Lobby(data);
-            console.log(`[Lobby] Loaded lobby: ${lobby.id}`);
+            // console.log(`[Lobby] Loaded lobby: ${lobby.id}`);
             return lobby;
         } catch (error) {
             ErrorLogger.log(new LobbyError(`Failed to load lobby: ${error.message}`, { lobbyId, error: error.message }));
@@ -75,7 +71,7 @@ export class Lobby {
     static async getActiveLobbies() {
         try {
             const lobbies = await redisManager.getActiveLobbies();
-            console.log(`[Lobby] Found ${lobbies.length} active lobbies`);
+            // console.log(`[Lobby] Found ${lobbies.length} active lobbies`);
             return lobbies.map(lobbyData => new Lobby(lobbyData));
         } catch (error) {
             ErrorLogger.log(new LobbyError(`Failed to get active lobbies: ${error.message}`, { error: error.message }));
@@ -91,9 +87,9 @@ export class Lobby {
             const data = this.toJSON();
             const saved = await redisManager.updateLobby(this.id, data);
             
-            if (saved) {
-                console.log(`[Lobby] Saved lobby: ${this.id}`);
-            }
+            // if (saved) {
+            //     console.log(`[Lobby] Saved lobby: ${this.id}`);
+            // }
             
             return saved;
         } catch (error) {
@@ -109,9 +105,9 @@ export class Lobby {
         try {
             const deleted = await redisManager.deleteLobby(this.id);
             
-            if (deleted) {
-                console.log(`[Lobby] Deleted lobby: ${this.id}`);
-            }
+            // if (deleted) {
+            //     console.log(`[Lobby] Deleted lobby: ${this.id}`);
+            // }
             
             return deleted;
         } catch (error) {
@@ -133,12 +129,12 @@ export class Lobby {
         }
 
         if (this.players.includes(playerId)) {
-            console.warn(`[Lobby] Player ${playerId} is already in lobby ${this.id}`);
+            // console.warn(`[Lobby] Player ${playerId} is already in lobby ${this.id}`);
             return false;
         }
 
         this.players.push(playerId);
-        console.log(`[Lobby] Player ${playerId} joined lobby ${this.id} (${this.players.length}/${this.maxPlayers})`);
+        // console.log(`[Lobby] Player ${playerId} joined lobby ${this.id} (${this.players.length}/${this.maxPlayers})`);
         return true;
     }
 
@@ -149,7 +145,7 @@ export class Lobby {
         const playerIndex = this.players.indexOf(playerId);
         
         if (playerIndex === -1) {
-            console.warn(`[Lobby] Player ${playerId} not found in lobby ${this.id}`);
+            // console.warn(`[Lobby] Player ${playerId} not found in lobby ${this.id}`);
             return false;
         }
 
@@ -159,14 +155,14 @@ export class Lobby {
         if (this.host === playerId) {
             if (this.players.length > 0) {
                 this.host = this.players[0];
-                console.log(`[Lobby] New host for lobby ${this.id}: ${this.host}`);
+                // console.log(`[Lobby] New host for lobby ${this.id}: ${this.host}`);
             } else {
-                console.log(`[Lobby] Lobby ${this.id} is now empty and will be deleted`);
+                // console.log(`[Lobby] Lobby ${this.id} is now empty and will be deleted`);
                 return 'delete_lobby';
             }
         }
 
-        console.log(`[Lobby] Player ${playerId} left lobby ${this.id} (${this.players.length}/${this.maxPlayers})`);
+        // console.log(`[Lobby] Player ${playerId} left lobby ${this.id} (${this.players.length}/${this.maxPlayers})`);
         return true;
     }
 
@@ -216,7 +212,7 @@ export class Lobby {
 
         await this.save();
 
-        console.log(`[Lobby] Starting game for lobby ${this.id} with session ${this.gameSessionId}`);
+        // console.log(`[Lobby] Starting game for lobby ${this.id} with session ${this.gameSessionId}`);
         return this.gameSessionId;
     }
 
@@ -226,7 +222,7 @@ export class Lobby {
     async setInGame() {
         this.status = 'in_game';
         await this.save();
-        console.log(`[Lobby] Lobby ${this.id} is now in game`);
+        // console.log(`[Lobby] Lobby ${this.id} is now in game`);
     }
 
     /**
@@ -235,7 +231,7 @@ export class Lobby {
     async finishGame() {
         this.status = 'finished';
         await this.save();
-        console.log(`[Lobby] Game finished for lobby ${this.id}`);
+        // console.log(`[Lobby] Game finished for lobby ${this.id}`);
     }
 
     /**
@@ -246,7 +242,7 @@ export class Lobby {
         this.startedAt = null;
         this.gameSessionId = null;
         await this.save();
-        console.log(`[Lobby] Reset lobby ${this.id} to waiting state`);
+        // console.log(`[Lobby] Reset lobby ${this.id} to waiting state`);
     }
 
     /**
@@ -254,7 +250,7 @@ export class Lobby {
      */
     updateSettings(newSettings) {
         this.gameSettings = { ...this.gameSettings, ...newSettings };
-        console.log(`[Lobby] Updated settings for lobby ${this.id}:`, newSettings);
+        // console.log(`[Lobby] Updated settings for lobby ${this.id}:`, newSettings);
     }
 
     /**

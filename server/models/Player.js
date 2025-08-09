@@ -51,7 +51,7 @@ export class Player {
                 throw new PlayerError('Failed to save new player to database', { playerId: player.id });
             }
             
-            console.log(`[Player] Created new player: ${player.id} (${player.name})`);
+            // console.log(`[Player] Created new player: ${player.id} (${player.name})`);
             return player;
         } catch (error) {
             ErrorLogger.log(new PlayerError(`Failed to create player: ${error.message}`, { playerData, error: error.message }));
@@ -71,7 +71,7 @@ export class Player {
             }
             
             const player = new Player(data);
-            console.log(`[Player] Loaded player: ${player.id} (${player.name})`);
+            // console.log(`[Player] Loaded player: ${player.id} (${player.name})`);
             return player;
         } catch (error) {
             ErrorLogger.log(new PlayerError(`Failed to load player: ${error.message}`, { playerId, error: error.message }));
@@ -88,9 +88,9 @@ export class Player {
             const data = this.toJSON();
             const saved = await redisManager.savePlayerData(this.id, data);
             
-            if (saved) {
-                console.log(`[Player] Saved player data: ${this.id}`);
-            }
+            // if (saved) {
+            //     console.log(`[Player] Saved player data: ${this.id}`);
+            // }
             
             return saved;
         } catch (error) {
@@ -106,14 +106,14 @@ export class Player {
         this.socketId = socketId;
         this.connectedAt = Date.now();
         this.lastSeen = Date.now();
-        console.log(`[Player] Player ${this.id} connected with socket ${socketId}`);
+        // console.log(`[Player] Player ${this.id} connected with socket ${socketId}`);
     }
 
     /**
      * Handles player disconnection
      */
     disconnect() {
-        console.log(`[Player] Player ${this.id} disconnected`);
+        // console.log(`[Player] Player ${this.id} disconnected`);
         this.socketId = null;
         this.connectedAt = null;
         this.lastSeen = Date.now();
@@ -145,7 +145,7 @@ export class Player {
         this.lobbyId = lobbyId;
         this.isHost = isHost;
         this.isReady = false;
-        console.log(`[Player] Player ${this.id} joined lobby ${lobbyId} as ${isHost ? 'host' : 'member'}`);
+        // console.log(`[Player] Player ${this.id} joined lobby ${lobbyId} as ${isHost ? 'host' : 'member'}`);
     }
 
     /**
@@ -158,7 +158,7 @@ export class Player {
         this.isReady = false;
         
         if (oldLobbyId) {
-            console.log(`[Player] Player ${this.id} left lobby ${oldLobbyId}`);
+            // console.log(`[Player] Player ${this.id} left lobby ${oldLobbyId}`);
         }
     }
 

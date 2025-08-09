@@ -5,9 +5,8 @@ import { createClient } from 'redis';
 import { ErrorLogger, GameError } from './errors.js';
 
 class RedisManager {
-    constructor() {
-        this.client = null;
-        this.isConnected = false;
+    isConnected() {
+        return this.client && this.client.isOpen;
     }
 
     async connect() {
@@ -23,12 +22,10 @@ class RedisManager {
 
             this.client.on('connect', () => {
                 console.log('[Redis] Connected to Redis server');
-                this.isConnected = true;
             });
 
             this.client.on('disconnect', () => {
                 console.warn('[Redis] Disconnected from Redis server');
-                this.isConnected = false;
             });
 
             await this.client.connect();
@@ -40,9 +37,8 @@ class RedisManager {
     }
 
     async disconnect() {
-        if (this.client && this.isConnected) {
+        if (this.client && this.client.isOpen) {
             await this.client.disconnect();
-            this.isConnected = false;
         }
     }
 
@@ -98,7 +94,7 @@ class RedisManager {
 
     // Inventory-specific operations
     async savePlayerInventory(playerId, inventory) {
-        if (!this.isConnected) {
+        if (!this.isConnected()) {
             const error = new GameError('Redis is not connected. Cannot save inventory.', 'REDIS_NOT_CONNECTED');
             ErrorLogger.log(error);
             return false;
@@ -115,7 +111,7 @@ class RedisManager {
     }
 
     async getPlayerInventory(playerId) {
-        if (!this.isConnected) {
+        if (!this.isConnected()) {
             const error = new GameError('Redis is not connected. Cannot get inventory.', 'REDIS_NOT_CONNECTED');
             ErrorLogger.log(error);
             return null;

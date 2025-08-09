@@ -3,21 +3,19 @@
  */
 import { jest } from '@jest/globals';
 
-// Mock Redis manager before any imports
 const mockRedisManager = {
     savePlayerInventory: jest.fn(),
     getPlayerInventory: jest.fn(),
-    connect: jest.fn().mockResolvedValue(true),
+    connect: jest.fn(),
     disconnect: jest.fn(),
-    isConnected: true
+    isConnected: jest.fn()
 };
 
-jest.unstable_mockModule('../../utils/redis.js', () => ({
-    default: mockRedisManager,
-    __esModule: true
+jest.mock('../../utils/redis.js', () => ({
+    __esModule: true,
+    default: mockRedisManager
 }));
 
-// Import after mocking
 import { MultiplayerInventory } from '../../models/MultiplayerInventory.js';
 
 describe('MultiplayerInventory Model', () => {
@@ -25,6 +23,7 @@ describe('MultiplayerInventory Model', () => {
         jest.clearAllMocks();
         mockRedisManager.savePlayerInventory.mockResolvedValue(true);
         mockRedisManager.getPlayerInventory.mockResolvedValue(null);
+        mockRedisManager.isConnected.mockReturnValue(true);
     });
 
     describe('Inventory Creation', () => {
@@ -182,8 +181,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should craft item successfully', async () => {
-            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
-
             const result = await inventory.craftItem('craft_coiffe_sheep');
             
             expect(result.success).toBe(true);
@@ -226,8 +223,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should equip item successfully', async () => {
-            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
-
             const result = await inventory.equipItem('coiffe_sheep');
             
             expect(result.success).toBe(true);
@@ -237,8 +232,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should replace equipped item', async () => {
-            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
-
             // Equip first item
             await inventory.equipItem('coiffe_sheep');
             expect(inventory.equipment.head).toBe('coiffe_sheep');
@@ -268,8 +261,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should unequip item successfully', async () => {
-            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
-
             // First equip an item
             await inventory.equipItem('coiffe_sheep');
             expect(inventory.equipment.head).toBe('coiffe_sheep');
@@ -309,8 +300,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should calculate drops from defeated enemies', async () => {
-            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
-
             // Mock random to always succeed
             const originalRandom = Math.random;
             Math.random = jest.fn(() => 0.1); // Always less than drop chances
@@ -333,8 +322,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should handle no drops from enemies', async () => {
-            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
-
             // Mock random to always fail
             const originalRandom = Math.random;
             Math.random = jest.fn(() => 0.9); // Always greater than drop chances
@@ -387,8 +374,6 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should create new inventory for new player', async () => {
-            mockRedisManager.getPlayerInventory.mockResolvedValue(null);
-
             const inventory = await MultiplayerInventory.load('new-player');
             
             expect(inventory).toBeDefined();

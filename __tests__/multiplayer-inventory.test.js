@@ -38,7 +38,7 @@ describe('MultiplayerInventoryManager', () => {
     // Clear all mocks before each test
     jest.clearAllMocks();
     window.localStorage.clear();
-    inventory = new MultiplayerInventory();
+    inventory = new MultiplayerInventoryManager();
   });
 
   test('constructor initializes correctly', () => {

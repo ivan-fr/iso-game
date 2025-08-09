@@ -33,6 +33,10 @@ export const getEnemiesState = () => gameState.enemiesState;
 export const getBossState = () => gameState.bossState;
 export const getDefeatedEnemiesCount = () => gameState.defeatedEnemiesCount;
 
+// Lobby mode detection - in lobby we use real-time multiplayer, not turn-based
+export const isInLobby = () => gameState.currentRoomId === -1;
+export const isInDungeon = () => gameState.currentRoomId !== -1;
+
 // Legacy exports for modules still using direct access - to be migrated
 export let currentRoomId, currentMapGrid, currentGridCols, currentGridRows;
 export let currentTurn, playerState, reachableTiles = [], attackableTiles = [];
@@ -511,7 +515,38 @@ async function startEnemyTurns() {
 }
 
 function handleCanvasClick(event) {
-    if (gameOver || currentTurn !== 'player' || isMoving || activeEnemy) return;
+    if (gameOver || isMoving) return;
+    
+    // In lobby mode, allow free movement without turn restrictions
+    if (isInLobby()) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const clickX = (event.clientX - rect.left) * dpr;
+        const clickY = (event.clientY - rect.top) * dpr;
+        
+        let clickedGrid = gridUtils.screenToIso(clickX, clickY, currentGridCols, currentGridRows);
+        console.log(`[LOBBY CLICK] Screen Click: (${clickX.toFixed(1)}, ${clickY.toFixed(1)}) -> ISO Grid: (${clickedGrid.x}, ${clickedGrid.y})`);
+        
+        // Check if the target tile is valid and free (not an obstacle or portal)
+        if (gridUtils.isTileValidAndFree(clickedGrid.x, clickedGrid.y, player, getAllLivingEntities(), currentMapGrid, currentGridCols, currentGridRows)) {
+            moveEntityToLobby(player, clickedGrid.x, clickedGrid.y);
+        } else {
+            // Check if it's a portal
+            const roomData = getRoomData(currentRoomId);
+            if (roomData && roomData.dungeonPortals) {
+                const portal = roomData.dungeonPortals.find(p => p.gridX === clickedGrid.x && p.gridY === clickedGrid.y);
+                if (portal) {
+                    showPortalPrompt(portal);
+                    return;
+                }
+            }
+            showMessage('Cannot move there - tile blocked.');
+        }
+        return;
+    }
+    
+    // Original dungeon mode logic (turn-based)
+    if (currentTurn !== 'player' || activeEnemy) return;
     const rect = canvas.getBoundingClientRect(); // rect.left/top are relative to viewport
     
     // Scale mouse click coordinates from CSS pixels to canvas drawing surface pixels

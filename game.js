@@ -36,8 +36,8 @@ export const getDefeatedEnemiesCount = () => gameState.defeatedEnemiesCount;
 // Legacy exports for modules still using direct access - to be migrated
 export let currentRoomId, currentMapGrid, currentGridCols, currentGridRows;
 export let currentTurn, playerState, reachableTiles = [], attackableTiles = [];
-export let isMoving, activeEnemy, gameOver, projectiles, hoveredTile;
-export let damageAnimations, buffAnimations, scheduledActions;
+export let isMoving, activeEnemy, gameOver, projectiles = [], hoveredTile;
+export let damageAnimations = [], buffAnimations = [], scheduledActions = [];
 export let defeatedEnemiesCount, enemyHoveredReachableTiles = [], hoveredEnemyId;
 export let enemiesState, bossState;
 
@@ -901,6 +901,8 @@ function updateDeathAnimation(entity) {
 }
 
 function updateProjectiles() {
+    if (!projectiles || projectiles.length === 0) return;
+    
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         p.x += p.dx;
@@ -1044,18 +1046,22 @@ export function gameTick() {
     updateProjectiles();
 
     // Update ongoing damage text animations
-    for (let i = damageAnimations.length - 1; i >= 0; i--) {
-        const anim = damageAnimations[i];
-        anim.time = (anim.time ?? 0) + 16; // Ensure time exists, approximate time per frame
-        if (anim.time > anim.duration) damageAnimations.splice(i, 1);
+    if (damageAnimations && damageAnimations.length > 0) {
+        for (let i = damageAnimations.length - 1; i >= 0; i--) {
+            const anim = damageAnimations[i];
+            anim.time = (anim.time ?? 0) + 16; // Ensure time exists, approximate time per frame
+            if (anim.time > anim.duration) damageAnimations.splice(i, 1);
+        }
     }
 
     // NEW: Update ongoing buff text animations
-    for (let i = buffAnimations.length - 1; i >= 0; i--) {
-        const anim = buffAnimations[i];
-        anim.time = (anim.time ?? 0) + 16; // Approximate time per frame
-        if (anim.time > anim.duration) {
-            buffAnimations.splice(i, 1);
+    if (buffAnimations && buffAnimations.length > 0) {
+        for (let i = buffAnimations.length - 1; i >= 0; i--) {
+            const anim = buffAnimations[i];
+            anim.time = (anim.time ?? 0) + 16; // Approximate time per frame
+            if (anim.time > anim.duration) {
+                buffAnimations.splice(i, 1);
+            }
         }
     }
 
@@ -1093,23 +1099,25 @@ export function gameTick() {
 
     // --- Process Scheduled Actions --- NEW SECTION ---
     const now = performance.now();
-    for (let i = scheduledActions.length - 1; i >= 0; i--) {
-        const action = scheduledActions[i];
-        if (now >= action.executionTime) {
-            console.log(`[Scheduler] Executing action: ${action.type}`);
-            try {
-                switch (action.type) {
-                    case 'applySpellEffect':
-                        applySpellEffect(action.data);
-                        break;
-                    // Add other action types here if needed later
-                    default:
-                        console.warn(`[Scheduler] Unknown action type: ${action.type}`);
+    if (scheduledActions && scheduledActions.length > 0) {
+        for (let i = scheduledActions.length - 1; i >= 0; i--) {
+            const action = scheduledActions[i];
+            if (now >= action.executionTime) {
+                console.log(`[Scheduler] Executing action: ${action.type}`);
+                try {
+                    switch (action.type) {
+                        case 'applySpellEffect':
+                            applySpellEffect(action.data);
+                            break;
+                        // Add other action types here if needed later
+                        default:
+                            console.warn(`[Scheduler] Unknown action type: ${action.type}`);
+                    }
+                } catch (error) {
+                    console.error(`[Scheduler] Error executing action ${action.type}:`, error, action.data);
                 }
-            } catch (error) {
-                console.error(`[Scheduler] Error executing action ${action.type}:`, error, action.data);
+                scheduledActions.splice(i, 1); // Remove executed action
             }
-            scheduledActions.splice(i, 1); // Remove executed action
         }
     }
     // --- End Scheduled Actions ---

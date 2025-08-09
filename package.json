@@ -27,10 +27,7 @@
     "transform": {},
     "globals": {
       "window": {}
-    },
-    "setupFilesAfterEnv": [
-      "./jest.setup.js"
-    ]
+    }
   },
   "repository": {
     "type": "git",

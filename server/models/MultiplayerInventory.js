@@ -148,8 +148,8 @@ export class MultiplayerInventory {
      * Loads player inventory from Redis
      */
     static async load(playerId) {
-        if (!redisManager.isConnected) {
-            console.warn(`[Inventory] Redis not connected. Creating a temporary inventory for player ${playerId}.`);
+        if (!redisManager.isConnected()) {
+            // console.warn(`[Inventory] Redis not connected. Creating a temporary inventory for player ${playerId}.`);
             return new MultiplayerInventory(playerId);
         }
         try {
@@ -157,11 +157,11 @@ export class MultiplayerInventory {
             
             if (!data) {
                 // Create new inventory for new player
-                console.log(`[Inventory] Creating new inventory for player ${playerId}`);
+                // console.log(`[Inventory] Creating new inventory for player ${playerId}`);
                 return new MultiplayerInventory(playerId);
             }
             
-            console.log(`[Inventory] Loaded inventory for player ${playerId}`);
+            // console.log(`[Inventory] Loaded inventory for player ${playerId}`);
             return new MultiplayerInventory(playerId, data);
         } catch (error) {
             ErrorLogger.log(new PlayerError(`Failed to load inventory: ${error.message}`, { playerId, error: error.message }));
@@ -173,8 +173,8 @@ export class MultiplayerInventory {
      * Saves inventory to Redis
      */
     async save() {
-        if (!redisManager.isConnected) {
-            console.warn(`[Inventory] Redis not connected. Skipping save for player ${this.playerId}.`);
+        if (!redisManager.isConnected()) {
+            // console.warn(`[Inventory] Redis not connected. Skipping save for player ${this.playerId}.`);
             return false;
         }
         try {
@@ -191,9 +191,9 @@ export class MultiplayerInventory {
             
             const saved = await redisManager.savePlayerInventory(this.playerId, data);
             
-            if (saved) {
-                console.log(`[Inventory] Saved inventory for player ${this.playerId} (version ${this.version})`);
-            }
+            // if (saved) {
+            //     console.log(`[Inventory] Saved inventory for player ${this.playerId} (version ${this.version})`);
+            // }
             
             return saved;
         } catch (error) {
@@ -205,12 +205,12 @@ export class MultiplayerInventory {
     // --- Resource Management ---
     addResource(resourceId, quantity = 1) {
         if (!allResources[resourceId]) {
-            console.warn(`[Inventory] Unknown resource: ${resourceId}`);
+            // console.warn(`[Inventory] Unknown resource: ${resourceId}`);
             return false;
         }
         
         this.resources[resourceId] = (this.resources[resourceId] || 0) + quantity;
-        console.log(`[Inventory] Added ${quantity} ${resourceId} to player ${this.playerId}`);
+        // console.log(`[Inventory] Added ${quantity} ${resourceId} to player ${this.playerId}`);
         return true;
     }
 
@@ -224,7 +224,7 @@ export class MultiplayerInventory {
             delete this.resources[resourceId];
         }
         
-        console.log(`[Inventory] Removed ${quantity} ${resourceId} from player ${this.playerId}`);
+        // console.log(`[Inventory] Removed ${quantity} ${resourceId} from player ${this.playerId}`);
         return true;
     }
 
@@ -239,12 +239,12 @@ export class MultiplayerInventory {
     // --- Item Management ---
     addItem(itemId, quantity = 1) {
         if (!allItems[itemId]) {
-            console.warn(`[Inventory] Unknown item: ${itemId}`);
+            // console.warn(`[Inventory] Unknown item: ${itemId}`);
             return false;
         }
         
         this.items[itemId] = (this.items[itemId] || 0) + quantity;
-        console.log(`[Inventory] Added ${quantity} ${itemId} to player ${this.playerId}`);
+        // console.log(`[Inventory] Added ${quantity} ${itemId} to player ${this.playerId}`);
         return true;
     }
 
@@ -258,7 +258,7 @@ export class MultiplayerInventory {
             delete this.items[itemId];
         }
         
-        console.log(`[Inventory] Removed ${quantity} ${itemId} from player ${this.playerId}`);
+        // console.log(`[Inventory] Removed ${quantity} ${itemId} from player ${this.playerId}`);
         return true;
     }
 
@@ -274,14 +274,14 @@ export class MultiplayerInventory {
     async craftItem(recipeId) {
         const recipe = allRecipes[recipeId];
         if (!recipe) {
-            console.log(`[Inventory] Unknown recipe: ${recipeId}`);
+            // console.log(`[Inventory] Unknown recipe: ${recipeId}`);
             return { success: false, error: 'Unknown recipe' };
         }
 
         // Check if all ingredients are available
         for (const ing of recipe.ingredients) {
             if (!this.hasResource(ing.resourceId, ing.quantity)) {
-                console.log(`[Inventory] Missing resource: ${ing.resourceId} (Need ${ing.quantity}, Have ${this.getResourceCount(ing.resourceId)})`);
+                // console.log(`[Inventory] Missing resource: ${ing.resourceId} (Need ${ing.quantity}, Have ${this.getResourceCount(ing.resourceId)})`);
                 return { 
                     success: false, 
                     error: `Missing resource: ${allResources[ing.resourceId]?.name || ing.resourceId}`,
@@ -305,7 +305,7 @@ export class MultiplayerInventory {
         // Save to Redis
         await this.save();
 
-        console.log(`[Inventory] Player ${this.playerId} crafted: ${allItems[recipe.itemId].name}`);
+        // console.log(`[Inventory] Player ${this.playerId} crafted: ${allItems[recipe.itemId].name}`);
         return { 
             success: true, 
             itemId: recipe.itemId,
@@ -339,7 +339,7 @@ export class MultiplayerInventory {
         // Save to Redis
         await this.save();
 
-        console.log(`[Inventory] Player ${this.playerId} equipped ${item.name} in ${currentSlot} slot`);
+        // console.log(`[Inventory] Player ${this.playerId} equipped ${item.name} in ${currentSlot} slot`);
         return { success: true, item: item, slot: currentSlot };
     }
 
@@ -358,7 +358,7 @@ export class MultiplayerInventory {
         // Save to Redis
         await this.save();
 
-        console.log(`[Inventory] Player ${this.playerId} unequipped item from ${slot} slot`);
+        // console.log(`[Inventory] Player ${this.playerId} unequipped item from ${slot} slot`);
         return { success: true, item: allItems[equippedItemId] };
     }
 
@@ -396,7 +396,7 @@ export class MultiplayerInventory {
                                 // Tally drops for display
                                 totalDrops[dropInfo.resourceId] = (totalDrops[dropInfo.resourceId] || 0) + quantity;
                                 hasNewDrops = true;
-                                console.log(`[Inventory] Player ${this.playerId} got drop: ${quantity}x ${allResources[dropInfo.resourceId]?.name}`);
+                                // console.log(`[Inventory] Player ${this.playerId} got drop: ${quantity}x ${allResources[dropInfo.resourceId]?.name}`);
                             }
                         });
                     }

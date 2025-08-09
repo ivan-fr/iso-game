@@ -123,12 +123,11 @@ export const VALIDATION = {
     MAX_AP: 10
 };
 
-// === Development Constants ===
+// === Debugging & Development ===
+const isTestEnvironment = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+
 export const DEBUG = {
-    ENABLE_LOGGING: true,
-    LOG_AI_DECISIONS: true,
-    LOG_PATHFINDING: false,
-    SHOW_GRID_COORDINATES: false
+    ENABLE_LOGGING: !isTestEnvironment, // Master switch for all console logs
 };
 
 // === Error Messages ===

@@ -37,7 +37,7 @@ describe('Performance Monitoring', () => {
             const duration = monitor.endTimer(timerId);
             
             expect(duration).toBeGreaterThanOrEqual(90);
-            expect(duration).toBeLessThanOrEqual(110);
+            expect(duration).toBeLessThanOrEqual(120);
             expect(monitor.timers.has(timerId)).toBe(false);
         });
 

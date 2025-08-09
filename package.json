@@ -18,7 +18,9 @@
       "**/?(*.)+(spec|test).js"
     ],
     "collectCoverageFrom": [
-      "*.js",
+      "**/*.js",
+      "!**/node_modules/**",
+      "!**/vendor/**",
       "!script.js",
       "!main.js"
     ],

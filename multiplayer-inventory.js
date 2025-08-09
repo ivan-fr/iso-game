@@ -3,10 +3,14 @@
  * Extends the original inventory to work with server synchronization
  */
 import { allResources, allItems, allRecipes } from './inventory.js';
-import multiplayerClient from './client/multiplayer.js';
+
+let instance = null;
 
 export class MultiplayerInventoryManager {
     constructor() {
+        if (instance) {
+            return instance;
+        }
         // Server-synced data
         this.resources = {};
         this.items = {};
@@ -19,12 +23,31 @@ export class MultiplayerInventoryManager {
         
         // Sync interval
         this.syncInterval = null;
+
+        // Multiplayer client will be injected
+        this.multiplayerClient = null;
+        
+        instance = this;
+    }
+
+    static getInstance() {
+        if (!instance) {
+            instance = new MultiplayerInventoryManager();
+        }
+        return instance;
+    }
+
+    static resetInstance() {
+        instance = null;
     }
 
     /**
      * Initialize the multiplayer inventory system
+     * @param {object} client - The multiplayer client instance
      */
-    initialize() {
+    initialize(client) {
+        this.multiplayerClient = client;
+
         // Request initial sync from server
         this.requestSync();
         
@@ -50,8 +73,8 @@ export class MultiplayerInventoryManager {
      * Request inventory sync from server
      */
     requestSync() {
-        if (multiplayerClient && multiplayerClient.isConnected) {
-            multiplayerClient.requestInventorySync();
+        if (this.multiplayerClient && this.multiplayerClient.isConnected) {
+            this.multiplayerClient.requestInventorySync();
         }
     }
 
@@ -175,8 +198,8 @@ export class MultiplayerInventoryManager {
         }
 
         // Send craft request to server
-        if (multiplayerClient && multiplayerClient.isConnected) {
-            multiplayerClient.craftItem(recipeId);
+        if (this.multiplayerClient && this.multiplayerClient.isConnected) {
+            this.multiplayerClient.craftItem(recipeId);
             
             // Optimistic update - assume it will succeed
             for (const ing of recipe.ingredients) {
@@ -206,8 +229,8 @@ export class MultiplayerInventoryManager {
         }
 
         // Send equip request to server
-        if (multiplayerClient && multiplayerClient.isConnected) {
-            multiplayerClient.equipItem(itemId);
+        if (this.multiplayerClient && this.multiplayerClient.isConnected) {
+            this.multiplayerClient.equipItem(itemId);
             
             // Optimistic update
             const currentSlot = item.slot;
@@ -313,37 +336,36 @@ export class MultiplayerInventoryManager {
     }
 }
 
-// Create singleton instance
-const multiplayerInventoryManager = new MultiplayerInventoryManager();
-
 // Global functions for server communication
 window.syncInventoryFromServer = function(inventoryData) {
-    multiplayerInventoryManager.updateFromServer(inventoryData);
+    MultiplayerInventoryManager.getInstance().updateFromServer(inventoryData);
 };
 
 window.handleCraftResult = function(result) {
+    const inventory = MultiplayerInventoryManager.getInstance();
     if (result.success) {
         console.log(`[MultiplayerInventory] Craft successful: ${result.itemName}`);
         // Inventory will be synced from server automatically
     } else {
         console.error(`[MultiplayerInventory] Craft failed: ${result.error}`);
         // Refresh inventory to revert optimistic updates
-        multiplayerInventoryManager.requestSync();
+        inventory.requestSync();
     }
 };
 
 window.handleEquipResult = function(result) {
+    const inventory = MultiplayerInventoryManager.getInstance();
     if (result.success) {
         console.log(`[MultiplayerInventory] Equip successful`);
     } else {
         console.error(`[MultiplayerInventory] Equip failed: ${result.error}`);
         // Refresh inventory to revert optimistic updates
-        multiplayerInventoryManager.requestSync();
+        inventory.requestSync();
     }
 };
 
 // Export for module usage
-export default multiplayerInventoryManager;
+export default MultiplayerInventoryManager;
 
 // Also make it globally available for backward compatibility
-window.multiplayerInventoryManager = multiplayerInventoryManager;
+window.MultiplayerInventoryManager = MultiplayerInventoryManager;

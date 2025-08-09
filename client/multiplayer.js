@@ -575,6 +575,8 @@ class MultiplayerClient {
 const multiplayerClient = new MultiplayerClient();
 
 // Make it available globally
-window.multiplayerClient = multiplayerClient;
+if (typeof window !== 'undefined') {
+    window.multiplayerClient = multiplayerClient;
+}
 
 export default multiplayerClient;

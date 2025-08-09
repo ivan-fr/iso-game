@@ -827,11 +827,66 @@ function moveEntityTo(entity, targetGridX, targetGridY, forceMove = false) {
     // isMoving is set inside animateEntityFullPath
     animateEntityFullPath(entity, path, () => {
         if (entity === player) {
-        reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            reachableTiles = gridUtils.getTilesInRangeBFS(player.gridX, player.gridY, player.mp, getAllLivingEntities(), false, currentMapGrid, currentGridCols, currentGridRows);
+            
+            // Check for portal interactions
+            checkPortalInteraction(targetGridX, targetGridY);
         }
         // isMoving is reset inside animateEntityFullPath
         updateAllUIWrapper();
     });
+}
+
+// Check if player moved onto a portal tile
+function checkPortalInteraction(gridX, gridY) {
+    const roomData = getRoomData(currentRoomId);
+    if (!roomData) return;
+
+    // Check dungeon portals (lobby to dungeons)
+    if (roomData.dungeonPortals) {
+        const portal = roomData.dungeonPortals.find(p => p.gridX === gridX && p.gridY === gridY);
+        if (portal) {
+            showPortalPrompt(portal);
+            return;
+        }
+    }
+
+    // Check exit portals (dungeons back to lobby)
+    if (roomData.exitPortal && roomData.exitPortal.gridX === gridX && roomData.exitPortal.gridY === gridY) {
+        showMessage("Returning to lobby...", 1500);
+        setTimeout(() => {
+            loadRoom(roomData.exitPortal.targetRoom);
+        }, 1000);
+    }
+}
+
+// Show portal interaction prompt
+function showPortalPrompt(portal) {
+    const message = `Enter ${portal.name}?\n${portal.description}\n\nPress 'E' to enter or move away to cancel.`;
+    showMessage(message, 5000);
+    
+    // Add temporary keydown listener for portal entry
+    const portalKeyHandler = (e) => {
+        if (e.key.toLowerCase() === 'e') {
+            e.preventDefault();
+            showMessage(`Entering ${portal.name}...`, 1500);
+            setTimeout(() => {
+                loadRoom(portal.targetRoom);
+            }, 1000);
+            window.removeEventListener('keydown', portalKeyHandler);
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            showMessage("Portal entry cancelled.", 1000);
+            window.removeEventListener('keydown', portalKeyHandler);
+        }
+    };
+    
+    window.addEventListener('keydown', portalKeyHandler);
+    
+    // Auto-remove listener after 10 seconds
+    setTimeout(() => {
+        window.removeEventListener('keydown', portalKeyHandler);
+    }, 10000);
 }
 
 function showDamageAnimation(x, y, value, color = '#ffec3d') {
@@ -1545,7 +1600,7 @@ function loadRoom(roomId) {
     showMessage(`Bienvenue: ${roomData.name}`, 3000);
 }
 
-export function initGame() {
+export function initGame(startingRoomId = 0) {
     canvas = document.getElementById('gameCanvas');
     if (!canvas) {
         console.error("Canvas element not found!");
@@ -1561,11 +1616,12 @@ export function initGame() {
     setupSpellTooltips(SPELLS);
     initAudioInteraction();
 
-    loadRoom(0); // Load initial room
+    loadRoom(startingRoomId); // Load starting room (lobby by default)
 
     // Expose necessary functions and variables globally for script.js interaction
     window.currentGame = {
         loadRoom: loadRoom,
+        getRoomData: getRoomData, // Add getRoomData for portal drawing
         get currentRoomId() { return currentRoomId; } // Use getter to ensure it reflects updates
         // Add other things if needed later, like player object reference?
         // playerRef: player

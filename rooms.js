@@ -6,6 +6,52 @@ function createEmptyGrid(rows, cols) {
 }
 
 export const ROOMS = [
+    // --- Room -1: LOBBY ---
+    {
+        id: -1,
+        name: "Lobby",
+        rows: 12,
+        cols: 16,
+        playerStart: { x: 8, y: 8 },
+        mapGrid: (() => {
+            const grid = createEmptyGrid(12, 16);
+            // Decorative obstacles and paths
+            grid[2][2] = 1; grid[2][3] = 1; grid[2][4] = 1; // Top left decoration
+            grid[2][12] = 1; grid[2][13] = 1; grid[2][14] = 1; // Top right decoration
+            grid[9][2] = 1; grid[9][3] = 1; grid[9][4] = 1; // Bottom left decoration
+            grid[9][12] = 1; grid[9][13] = 1; grid[9][14] = 1; // Bottom right decoration
+            
+            // Central fountain/decoration
+            grid[5][7] = 1; grid[5][8] = 1;
+            grid[6][7] = 1; grid[6][8] = 1;
+            
+            return grid;
+        })(),
+        enemies: [],
+        dungeonPortals: [
+            { 
+                gridX: 2, 
+                gridY: 1, 
+                targetRoom: 0, 
+                name: "Training Grounds",
+                description: "A safe place to practice your skills"
+            },
+            { 
+                gridX: 14, 
+                gridY: 1, 
+                targetRoom: 1, 
+                name: "War Chief's Antechamber",
+                description: "Face the War Chief's minions"
+            },
+            { 
+                gridX: 8, 
+                gridY: 1, 
+                targetRoom: 2, 
+                name: "Throne Room",
+                description: "The final challenge awaits"
+            }
+        ]
+    },
     // --- Room 0 ---
     {
         id: 0,
@@ -26,7 +72,8 @@ export const ROOMS = [
             { type: 'sheep', gridX: 3, gridY: 7 },
             { type: 'sheepist_noir', gridX: 10, gridY: 4 },
             { type: 'sheepist_noir', gridX: 5, gridY: 5 },
-        ]
+        ],
+        exitPortal: { gridX: 1, gridY: 1, targetRoom: -1 } // Return to lobby
     },
     // --- Room 1 ---
     {
@@ -58,7 +105,8 @@ export const ROOMS = [
             { type: 'sheep', gridX: 4, gridY: 11 },
             { type: 'sheepist_noir', gridX: 7, gridY: 7 },
             { type: 'chef_de_guerre', gridX: 11, gridY: 11 },
-        ]
+        ],
+        exitPortal: { gridX: 1, gridY: 6, targetRoom: -1 } // Return to lobby
     },
     // --- Room 2 ---
     {
@@ -84,11 +132,12 @@ export const ROOMS = [
             { type: 'sheepist_noir', gridX: 14, gridY: 7 }, // Right
             { type: 'chef_de_guerre', gridX: 7, gridY: 14 }, // Bottom
             { type: 'boss', gridX: 14, gridY: 1 }, // Top Right
-        ]
+        ],
+        exitPortal: { gridX: 1, gridY: 7, targetRoom: -1 } // Return to lobby
     },
 ];
 
 // Function to get room data by ID
 export function getRoomData(roomId) {
     return ROOMS.find(room => room.id === roomId);
-} 
+}

@@ -10,6 +10,7 @@ import './script.js'; // Import to execute its setup code
 window.addEventListener('DOMContentLoaded', () => {
     // Optional: Log inventoryManager to confirm it's loaded
     console.log("Inventory Manager loaded in main.js:", inventoryManager);
-    initGame();
+    // Start in lobby (room -1) instead of room 0
+    initGame(-1); // Pass lobby room ID to start there
     startGameLoop();
 });

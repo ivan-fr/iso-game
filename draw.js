@@ -703,7 +703,9 @@ export function drawGrid(
     entitiesToDraw, // Renamed from entities
     // NEW: Receive enemy hover state
     enemyHoveredReachableTiles,
-    hoveredEnemyId 
+    hoveredEnemyId,
+    // NEW: Receive current room ID for portal drawing
+    currentRoomId
 ) {
     // --- Determine the primary hover target tile --- 
     let primaryHoverX = -1;
@@ -972,6 +974,84 @@ export function drawGrid(
     // 4. Execute draw functions in sorted order
     for (const d of drawables) {
          try { d.draw(); } catch(e) { console.error("Error drawing drawable:", d, e); }
+    }
+    
+    // 5. Draw Portals (added for lobby system)
+    drawPortals(ctx, currentRoomId, TILE_W, TILE_H);
+}
+
+// Function to draw portals on the grid
+function drawPortals(ctx, currentRoomId, TILE_W, TILE_H) {
+    // Access getRoomData from window if available (set by game.js)
+    const getRoomData = window.currentGame?.getRoomData;
+    if (!getRoomData) return;
+    
+    const roomData = getRoomData(currentRoomId);
+    if (!roomData) return;
+
+    const now = performance.now();
+    const pulse = 0.7 + 0.3 * Math.sin(now / 400);
+
+    // Draw dungeon portals (in lobby)
+    if (roomData.dungeonPortals) {
+        roomData.dungeonPortals.forEach(portal => {
+            const screenPos = isoToScreen(portal.gridX, portal.gridY);
+            
+            ctx.save();
+            ctx.globalAlpha = pulse;
+            
+            // Portal background circle
+            ctx.fillStyle = '#3498db';
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - TILE_H / 4, TILE_W * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Portal inner circle
+            ctx.fillStyle = '#87ceeb';
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - TILE_H / 4, TILE_W * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Portal name text
+            ctx.globalAlpha = 1;
+            ctx.font = `bold ${Math.max(10, TILE_W * 0.12)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillText(portal.name, screenPos.x, screenPos.y - TILE_H);
+            
+            ctx.restore();
+        });
+    }
+
+    // Draw exit portal (in dungeons)
+    if (roomData.exitPortal) {
+        const portal = roomData.exitPortal;
+        const screenPos = isoToScreen(portal.gridX, portal.gridY);
+        
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        
+        // Exit portal styling (different color)
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - TILE_H / 4, TILE_W * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#ffb3ba';
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - TILE_H / 4, TILE_W * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Exit text
+        ctx.globalAlpha = 1;
+        ctx.font = `bold ${Math.max(10, TILE_W * 0.12)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillText('Exit', screenPos.x, screenPos.y - TILE_H);
+        
+        ctx.restore();
     }
 }
 

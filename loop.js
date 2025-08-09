@@ -6,6 +6,7 @@ import {
     buffAnimations,
     currentGridCols, currentGridRows,
     currentMapGrid,
+    currentRoomId, // Add currentRoomId for portal drawing
     damageAnimations,
     enemiesState,
     enemyHoveredReachableTiles,
@@ -144,7 +145,8 @@ export function startGameLoop() {
             window.loadedImageStatus.tile, // Pass tile loaded status
             currentEntities, // Pass dynamic list of entities to draw
             enemyHoveredReachableTiles,
-            hoveredEnemyId
+            hoveredEnemyId,
+            currentRoomId // Pass current room ID for portal drawing
         );
         PerformanceUtils.endTimer('drawGrid');
 

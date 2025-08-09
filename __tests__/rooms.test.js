@@ -4,7 +4,7 @@ describe('Rooms Module Tests', () => {
     
     describe('ROOMS Data Structure', () => {
         test('should contain expected number of rooms', () => {
-            expect(ROOMS).toHaveLength(3);
+            expect(ROOMS).toHaveLength(4); // Now includes lobby room
         });
 
         test('each room should have required properties', () => {
@@ -78,8 +78,40 @@ describe('Rooms Module Tests', () => {
         });
     });
 
+    describe('Lobby Room', () => {
+        const lobbyRoom = ROOMS[0];
+
+        test('should have correct basic properties', () => {
+            expect(lobbyRoom.id).toBe(-1);
+            expect(lobbyRoom.name).toBe("Lobby");
+            expect(lobbyRoom.rows).toBe(12);
+            expect(lobbyRoom.cols).toBe(16);
+        });
+
+        test('should have no enemies', () => {
+            expect(lobbyRoom.enemies).toEqual([]);
+        });
+
+        test('should have dungeon portals', () => {
+            expect(lobbyRoom.dungeonPortals).toBeDefined();
+            expect(lobbyRoom.dungeonPortals.length).toBe(3);
+            
+            lobbyRoom.dungeonPortals.forEach(portal => {
+                expect(portal).toHaveProperty('gridX');
+                expect(portal).toHaveProperty('gridY');
+                expect(portal).toHaveProperty('targetRoom');
+                expect(portal).toHaveProperty('name');
+                expect(portal).toHaveProperty('description');
+            });
+        });
+
+        test('should not have an exit portal', () => {
+            expect(lobbyRoom.exitPortal).toBeUndefined();
+        });
+    });
+
     describe('Room 0 - Training Room', () => {
-        const room0 = ROOMS[0];
+        const room0 = ROOMS[1]; // Training room is now at index 1
 
         test('should have correct basic properties', () => {
             expect(room0.id).toBe(0);
@@ -126,7 +158,7 @@ describe('Rooms Module Tests', () => {
     });
 
     describe('Room 1 - Antechamber', () => {
-        const room1 = ROOMS[1];
+        const room1 = ROOMS[2]; // Antechamber is now at index 2
 
         test('should have correct basic properties', () => {
             expect(room1.id).toBe(1);
@@ -162,7 +194,7 @@ describe('Rooms Module Tests', () => {
     });
 
     describe('Room 2 - Throne Room', () => {
-        const room2 = ROOMS[2];
+        const room2 = ROOMS[3]; // Throne room is now at index 3
 
         test('should have correct basic properties', () => {
             expect(room2.id).toBe(2);
@@ -219,17 +251,18 @@ describe('Rooms Module Tests', () => {
 
     describe('getRoomData Function', () => {
         test('should return correct room data for valid IDs', () => {
+            const lobbyRoom = getRoomData(-1);
             const room0 = getRoomData(0);
             const room1 = getRoomData(1);
             const room2 = getRoomData(2);
             
-            expect(room0).toBe(ROOMS[0]);
-            expect(room1).toBe(ROOMS[1]);
-            expect(room2).toBe(ROOMS[2]);
+            expect(lobbyRoom).toBe(ROOMS[0]);
+            expect(room0).toBe(ROOMS[1]);
+            expect(room1).toBe(ROOMS[2]);
+            expect(room2).toBe(ROOMS[3]);
         });
 
         test('should return undefined for invalid room IDs', () => {
-            expect(getRoomData(-1)).toBeUndefined();
             expect(getRoomData(3)).toBeUndefined();
             expect(getRoomData(999)).toBeUndefined();
         });
@@ -277,18 +310,17 @@ describe('Rooms Module Tests', () => {
     });
 
     describe('Room Progression Logic', () => {
-        test('rooms should have increasing difficulty (more enemies)', () => {
-            // Room 0 has 4 enemies, room 1 has 4, room 2 has 4
-            // But room 2 has a boss, so it's conceptually harder
-            expect(ROOMS[0].enemies.length).toBeGreaterThanOrEqual(3);
+        test('dungeon rooms should have increasing difficulty (more enemies)', () => {
+            // Skip the lobby room (index 0) and test dungeon rooms (indices 1-3)
             expect(ROOMS[1].enemies.length).toBeGreaterThanOrEqual(3);
             expect(ROOMS[2].enemies.length).toBeGreaterThanOrEqual(3);
+            expect(ROOMS[3].enemies.length).toBeGreaterThanOrEqual(3);
         });
 
         test('boss should only appear in final room', () => {
-            const room0HasBoss = ROOMS[0].enemies.some(e => e.type === 'boss');
-            const room1HasBoss = ROOMS[1].enemies.some(e => e.type === 'boss');
-            const room2HasBoss = ROOMS[2].enemies.some(e => e.type === 'boss');
+            const room0HasBoss = ROOMS[1].enemies.some(e => e.type === 'boss'); // Training room
+            const room1HasBoss = ROOMS[2].enemies.some(e => e.type === 'boss'); // Antechamber
+            const room2HasBoss = ROOMS[3].enemies.some(e => e.type === 'boss'); // Throne room
             
             expect(room0HasBoss).toBe(false);
             expect(room1HasBoss).toBe(false);

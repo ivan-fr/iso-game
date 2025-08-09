@@ -224,7 +224,7 @@ describe('MultiplayerInventory Model', () => {
         });
 
         test('should equip item successfully', async () => {
-            redisManager.savePlayerInventory.mockResolvedValue(true);
+            mockRedisManager.savePlayerInventory.mockResolvedValue(true);
 
             const result = await inventory.equipItem('coiffe_sheep');
             
